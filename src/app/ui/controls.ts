@@ -1,5 +1,5 @@
-import { getState, updateParams } from './state'
-import type { Shape, TextMode } from '../../core/parameters/common'
+import { getState, updateParams, updateColor } from './state'
+import type { Shape, TextMode, KeychainPosition, KeychainPlacement } from '../../core/parameters/common'
 
 function el<T extends HTMLElement>(tag: string, attrs: Record<string, string> = {}): T {
   const e = document.createElement(tag) as T
@@ -176,6 +176,26 @@ export function createControls(): void {
       'Keychain',
       checkboxRow('Add keyring hole', 'isKeychain'),
       sliderRow('Hole diameter (mm)', 'holeDiameter', 2, 12, 0.5),
+      segmentRow<KeychainPlacement>(
+        'Placement',
+        [
+          { value: 'outside', label: 'Outside' },
+          { value: 'inside',  label: 'Inside'  },
+        ],
+        params.keychainPlacement,
+        (v) => updateParams({ keychainPlacement: v }),
+      ),
+      segmentRow<KeychainPosition>(
+        'Position',
+        [
+          { value: 'top',    label: 'Top'    },
+          { value: 'bottom', label: 'Bottom' },
+          { value: 'left',   label: 'Left'   },
+          { value: 'right',  label: 'Right'  },
+        ],
+        params.keychainPosition,
+        (v) => updateParams({ keychainPosition: v }),
+      ),
     ),
   )
 
@@ -198,4 +218,41 @@ export function createControls(): void {
       ),
     ),
   )
+
+  container.appendChild(divider())
+
+  // ── Display ────────────────────────────────────────────────
+  container.appendChild(
+    group('Display', colorPickerRow(), colorInfoBox()),
+  )
+}
+
+function colorPickerRow(): HTMLElement {
+  const { modelColor } = getState()
+
+  const row = el('div')
+  row.className = 'control-row row-inline'
+
+  const lbl = el('label')
+  lbl.textContent = 'Model color'
+
+  const input = el<HTMLInputElement>('input', {
+    type: 'color',
+    value: modelColor,
+  })
+
+  input.addEventListener('input', () => updateColor(input.value))
+
+  row.appendChild(lbl)
+  row.appendChild(input)
+  return row
+}
+
+function colorInfoBox(): HTMLElement {
+  const box = el('div')
+  box.className = 'info-box'
+  box.textContent =
+    'The selected color is only for visualization purposes. STL files store geometry only ' +
+    'and do not support color information.'
+  return box
 }

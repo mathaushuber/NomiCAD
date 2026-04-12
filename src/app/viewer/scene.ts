@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { geometries } from '@jscad/modeling'
 
 let activeMesh: THREE.Mesh | null = null
+let activeMaterial: THREE.MeshPhongMaterial | null = null
 
 export function createScene(): THREE.Scene {
   const scene = new THREE.Scene()
@@ -45,21 +46,30 @@ export function updateSceneMesh(scene: THREE.Scene, jscadGeom: any): void {
   if (activeMesh) {
     scene.remove(activeMesh)
     activeMesh.geometry.dispose()
-    ;(activeMesh.material as THREE.Material).dispose()
+    activeMaterial?.dispose()
     activeMesh = null
+    activeMaterial = null
   }
 
   const geometry = jscadToThreeGeometry(jscadGeom)
 
-  const material = new THREE.MeshPhongMaterial({
+  activeMaterial = new THREE.MeshPhongMaterial({
     color: 0x4a9eff,
     specular: 0x0a1a2e,
     shininess: 50,
     side: THREE.DoubleSide,
   })
 
-  activeMesh = new THREE.Mesh(geometry, material)
+  activeMesh = new THREE.Mesh(geometry, activeMaterial)
   // JSCAD is Z-up; rotate to Three.js Y-up so the model lies flat on the grid
   activeMesh.rotation.x = -Math.PI / 2
   scene.add(activeMesh)
+}
+
+/**
+ * Updates the active mesh material color without touching the geometry.
+ * Accepts any CSS color string (hex, rgb, named).
+ */
+export function setMeshColor(color: string): void {
+  activeMaterial?.color.setStyle(color)
 }

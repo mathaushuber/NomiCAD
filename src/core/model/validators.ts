@@ -1,9 +1,15 @@
-import type { ModelParams } from '../parameters/common'
+import type { ModelParams, KeychainPosition, KeychainPlacement } from '../parameters/common'
 
 export interface ValidationResult {
   valid: boolean
   errors: string[]
 }
+
+const VALID_POSITIONS: KeychainPosition[] = ['top', 'bottom', 'left', 'right']
+const VALID_PLACEMENTS: KeychainPlacement[] = ['inside', 'outside']
+
+/** Minimum usable interior on the relevant axis for an inside hole (mm). */
+const INSIDE_MIN_INTERIOR = 12
 
 export function validateParams(params: ModelParams): ValidationResult {
   const errors: string[] = []
@@ -20,14 +26,30 @@ export function validateParams(params: ModelParams): ValidationResult {
     errors.push('Thickness must be between 1 and 20 mm')
   }
 
+  if (!VALID_POSITIONS.includes(params.keychainPosition)) {
+    errors.push(`keychainPosition must be one of: ${VALID_POSITIONS.join(', ')}`)
+  }
+
+  if (!VALID_PLACEMENTS.includes(params.keychainPlacement)) {
+    errors.push(`keychainPlacement must be one of: ${VALID_PLACEMENTS.join(', ')}`)
+  }
+
   if (params.isKeychain) {
     if (params.holeDiameter < 2 || params.holeDiameter > 15) {
       errors.push('Hole diameter must be between 2 and 15 mm')
     }
 
-    const minDimension = Math.min(params.width, params.height)
-    if (params.holeDiameter >= minDimension * 0.6) {
-      errors.push('Hole diameter is too large relative to shape size')
+    if (params.keychainPlacement === 'inside') {
+      // The hole must fit on the relevant axis with at least INSIDE_MIN_INTERIOR left over.
+      const isVertical =
+        params.keychainPosition === 'top' || params.keychainPosition === 'bottom'
+      const axisDim = isVertical ? params.height : params.width
+      if (params.holeDiameter + INSIDE_MIN_INTERIOR > axisDim) {
+        errors.push(
+          `Shape is too small for an inside hole on the ${params.keychainPosition} edge — ` +
+            `increase ${isVertical ? 'height' : 'width'} or switch to outside placement`,
+        )
+      }
     }
   }
 

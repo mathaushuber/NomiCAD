@@ -2,6 +2,10 @@ export type Shape = 'rectangle' | 'oval'
 
 export type TextMode = 'positive' | 'negative' | 'cutout'
 
+export type KeychainPosition = 'top' | 'bottom' | 'left' | 'right'
+
+export type KeychainPlacement = 'inside' | 'outside'
+
 export interface ModelParams {
   shape: Shape
   width: number
@@ -9,6 +13,8 @@ export interface ModelParams {
   thickness: number
   isKeychain: boolean
   holeDiameter: number
+  keychainPosition: KeychainPosition
+  keychainPlacement: KeychainPlacement
   text: string
   textMode: TextMode
 }
@@ -20,6 +26,8 @@ export const DEFAULT_PARAMS: ModelParams = {
   thickness: 3,
   isKeychain: true,
   holeDiameter: 5,
+  keychainPosition: 'top',
+  keychainPlacement: 'outside',
   text: 'NomiCAD',
   textMode: 'negative',
 }
