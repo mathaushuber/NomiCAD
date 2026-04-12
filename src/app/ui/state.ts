@@ -1,7 +1,8 @@
 import { DEFAULT_PARAMS } from '../../core/parameters/common'
 import type { ModelParams } from '../../core/parameters/common'
+import { config } from '../../config/loadConfig'
 
-export const DEFAULT_MODEL_COLOR = '#4a9eff'
+export const DEFAULT_MODEL_COLOR = config.defaultColor
 
 export interface AppState {
   params: ModelParams

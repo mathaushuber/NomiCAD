@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Parametric 3D modeling library for personalized tags and keychains",
+  "bin": {
+    "nomicad": "./bin/nomicad.js"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

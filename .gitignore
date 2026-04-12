@@ -14,6 +14,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# NomiCAD project config (project-specific, not committed)
+nomicad.config.json
+
 # Environment variables
 .env
 .env.*

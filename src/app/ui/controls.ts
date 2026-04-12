@@ -1,5 +1,8 @@
 import { getState, updateParams, updateColor } from './state'
 import type { Shape, TextMode, KeychainPosition, KeychainPlacement } from '../../core/parameters/common'
+import { t } from '../../i18n/index'
+
+// ── DOM helpers ────────────────────────────────────────────────────────────
 
 function el<T extends HTMLElement>(tag: string, attrs: Record<string, string> = {}): T {
   const e = document.createElement(tag) as T
@@ -23,6 +26,8 @@ function divider(): HTMLElement {
   d.className = 'divider'
   return d
 }
+
+// ── Control primitives ─────────────────────────────────────────────────────
 
 function sliderRow(
   label: string,
@@ -62,7 +67,10 @@ function sliderRow(
   return row
 }
 
-function textRow(label: string, key: keyof ReturnType<typeof getState>['params']): HTMLElement {
+function textRow(
+  label: string,
+  key: keyof ReturnType<typeof getState>['params'],
+): HTMLElement {
   const params = getState().params
   const row = el('div')
   row.className = 'control-row'
@@ -74,7 +82,7 @@ function textRow(label: string, key: keyof ReturnType<typeof getState>['params']
     type: 'text',
     value: String(params[key]),
     maxlength: '24',
-    placeholder: 'Enter text...',
+    placeholder: t('text.placeholder'),
   })
 
   input.addEventListener('input', () => {
@@ -86,7 +94,10 @@ function textRow(label: string, key: keyof ReturnType<typeof getState>['params']
   return row
 }
 
-function checkboxRow(label: string, key: keyof ReturnType<typeof getState>['params']): HTMLElement {
+function checkboxRow(
+  label: string,
+  key: keyof ReturnType<typeof getState>['params'],
+): HTMLElement {
   const params = getState().params
   const row = el('div')
   row.className = 'control-row row-inline'
@@ -94,9 +105,7 @@ function checkboxRow(label: string, key: keyof ReturnType<typeof getState>['para
   const lbl = el('label')
   lbl.textContent = label
 
-  const input = el<HTMLInputElement>('input', {
-    type: 'checkbox',
-  })
+  const input = el<HTMLInputElement>('input', { type: 'checkbox' })
   input.checked = params[key] as boolean
 
   input.addEventListener('change', () => {
@@ -143,6 +152,32 @@ function segmentRow<T extends string>(
   return row
 }
 
+function colorPickerRow(): HTMLElement {
+  const { modelColor } = getState()
+
+  const row = el('div')
+  row.className = 'control-row row-inline'
+
+  const lbl = el('label')
+  lbl.textContent = t('display.color')
+
+  const input = el<HTMLInputElement>('input', { type: 'color', value: modelColor })
+  input.addEventListener('input', () => updateColor(input.value))
+
+  row.appendChild(lbl)
+  row.appendChild(input)
+  return row
+}
+
+function colorInfoBox(): HTMLElement {
+  const box = el('div')
+  box.className = 'info-box'
+  box.textContent = t('display.colorInfo')
+  return box
+}
+
+// ── Public entry point ─────────────────────────────────────────────────────
+
 export function createControls(): void {
   const container = document.getElementById('controls')
   if (!container) return
@@ -152,19 +187,19 @@ export function createControls(): void {
   // ── Shape ──────────────────────────────────────────────────
   container.appendChild(
     group(
-      'Shape',
+      t('shape.group'),
       segmentRow<Shape>(
-        'Type',
+        t('shape.type'),
         [
-          { value: 'rectangle', label: 'Rectangle' },
-          { value: 'oval', label: 'Oval' },
+          { value: 'rectangle', label: t('shape.rectangle') },
+          { value: 'oval',      label: t('shape.oval')      },
         ],
         params.shape,
         (v) => updateParams({ shape: v }),
       ),
-      sliderRow('Width (mm)', 'width', 20, 120, 1),
-      sliderRow('Height (mm)', 'height', 15, 80, 1),
-      sliderRow('Thickness (mm)', 'thickness', 1, 10, 0.5),
+      sliderRow(t('shape.width'),     'width',     20,  120, 1  ),
+      sliderRow(t('shape.height'),    'height',    15,  80,  1  ),
+      sliderRow(t('shape.thickness'), 'thickness',  1,  10,  0.5),
     ),
   )
 
@@ -173,25 +208,25 @@ export function createControls(): void {
   // ── Keychain ───────────────────────────────────────────────
   container.appendChild(
     group(
-      'Keychain',
-      checkboxRow('Add keyring hole', 'isKeychain'),
-      sliderRow('Hole diameter (mm)', 'holeDiameter', 2, 12, 0.5),
+      t('keychain.group'),
+      checkboxRow(t('keychain.enable'),   'isKeychain'),
+      sliderRow(t('keychain.diameter'), 'holeDiameter', 2, 12, 0.5),
       segmentRow<KeychainPlacement>(
-        'Placement',
+        t('keychain.placement'),
         [
-          { value: 'outside', label: 'Outside' },
-          { value: 'inside',  label: 'Inside'  },
+          { value: 'outside', label: t('keychain.placement.outside') },
+          { value: 'inside',  label: t('keychain.placement.inside')  },
         ],
         params.keychainPlacement,
         (v) => updateParams({ keychainPlacement: v }),
       ),
       segmentRow<KeychainPosition>(
-        'Position',
+        t('keychain.position'),
         [
-          { value: 'top',    label: 'Top'    },
-          { value: 'bottom', label: 'Bottom' },
-          { value: 'left',   label: 'Left'   },
-          { value: 'right',  label: 'Right'  },
+          { value: 'top',    label: t('keychain.position.top')    },
+          { value: 'bottom', label: t('keychain.position.bottom') },
+          { value: 'left',   label: t('keychain.position.left')   },
+          { value: 'right',  label: t('keychain.position.right')  },
         ],
         params.keychainPosition,
         (v) => updateParams({ keychainPosition: v }),
@@ -204,14 +239,14 @@ export function createControls(): void {
   // ── Text ───────────────────────────────────────────────────
   container.appendChild(
     group(
-      'Text',
-      textRow('Content', 'text'),
+      t('text.group'),
+      textRow(t('text.content'), 'text'),
       segmentRow<TextMode>(
-        'Mode',
+        t('text.mode'),
         [
-          { value: 'positive', label: 'Raised' },
-          { value: 'negative', label: 'Inset' },
-          { value: 'cutout', label: 'Cutout' },
+          { value: 'positive', label: t('text.mode.raised') },
+          { value: 'negative', label: t('text.mode.inset')  },
+          { value: 'cutout',   label: t('text.mode.cutout') },
         ],
         params.textMode,
         (v) => updateParams({ textMode: v }),
@@ -223,36 +258,6 @@ export function createControls(): void {
 
   // ── Display ────────────────────────────────────────────────
   container.appendChild(
-    group('Display', colorPickerRow(), colorInfoBox()),
+    group(t('display.group'), colorPickerRow(), colorInfoBox()),
   )
-}
-
-function colorPickerRow(): HTMLElement {
-  const { modelColor } = getState()
-
-  const row = el('div')
-  row.className = 'control-row row-inline'
-
-  const lbl = el('label')
-  lbl.textContent = 'Model color'
-
-  const input = el<HTMLInputElement>('input', {
-    type: 'color',
-    value: modelColor,
-  })
-
-  input.addEventListener('input', () => updateColor(input.value))
-
-  row.appendChild(lbl)
-  row.appendChild(input)
-  return row
-}
-
-function colorInfoBox(): HTMLElement {
-  const box = el('div')
-  box.className = 'info-box'
-  box.textContent =
-    'The selected color is only for visualization purposes. STL files store geometry only ' +
-    'and do not support color information.'
-  return box
 }
