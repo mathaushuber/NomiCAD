@@ -11,19 +11,22 @@
   --surface: #13132b;
   --surface-alt: #1a1a35;
   --border: #2a2a50;
-  /* --accent and its derivatives are overridden at runtime by applyTheme().
-     The values below are static fallbacks active before JS executes. */
-  --accent:        #4a9eff;
-  --accent-hover:  #6ab0ff;
+
+  /* Accent colors are overridden at runtime by applyTheme().
+     These are fallback values before JS executes. */
+  --accent: #4a9eff;
+  --accent-hover: #6ab0ff;
   --accent-subtle: rgba(74, 158, 255, 0.07);
   --accent-border: rgba(74, 158, 255, 0.18);
+
   --text: #e0e0f0;
   --text-muted: #8888aa;
   --radius: 6px;
   --sidebar-width: 300px;
-  /* --sidebar-bg and --sidebar-text are overridden at runtime by applyTheme().
-     The values below are static fallbacks active before JS executes. */
-  --sidebar-bg:   #13132b;
+
+  /* Sidebar colors are overridden at runtime by applyTheme().
+     These are fallback values before JS executes. */
+  --sidebar-bg: #13132b;
   --sidebar-text: #e0e0f0;
 }
 
@@ -72,7 +75,7 @@ body {
 
 .subtitle {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--sidebar-text);
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -93,7 +96,7 @@ body {
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--sidebar-text);
   margin-bottom: 10px;
 }
 
@@ -106,7 +109,7 @@ body {
 
 .control-row label {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--sidebar-text);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -168,7 +171,7 @@ body {
   background: var(--surface-alt);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  color: var(--text-muted);
+  color: var(--sidebar-text);
   font-size: 12px;
   cursor: pointer;
   transition: all 0.15s;
@@ -219,7 +222,7 @@ input[type='color']::-webkit-color-swatch {
   border-radius: var(--radius);
   font-size: 11px;
   line-height: 1.55;
-  color: var(--text-muted);
+  color: var(--sidebar-text);
 }
 
 /* ── Export ──────────────────────────────────────────────── */
@@ -257,7 +260,7 @@ input[type='color']::-webkit-color-swatch {
 .watermark {
   display: block;
   font-size: 10px;
-  color: var(--text-muted);
+  color: var(--sidebar-text);
   opacity: 0.6;
   letter-spacing: 0.2px;
   user-select: none;
