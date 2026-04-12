@@ -10,10 +10,23 @@ const en = {
   // ── Shape group ────────────────────────────────────────────
   'shape.group':     'Shape',
   'shape.type':      'Type',
-  'shape.rectangle': 'Rectangle',
-  'shape.oval':      'Oval',
-  'shape.width':     'Width (mm)',
-  'shape.height':    'Height (mm)',
+  // Shape names
+  'shape.rectangle':         'Rectangle',
+  'shape.rounded-rectangle': 'Rounded Rectangle',
+  'shape.oval':              'Oval',
+  'shape.circle':            'Circle',
+  'shape.triangle':          'Triangle',
+  'shape.hexagon':           'Hexagon',
+  'shape.star':              'Star',
+  'shape.heart':             'Heart',
+  // Shape categories
+  'shape.category.basic':       'Basic',
+  'shape.category.geometric':   'Geometric',
+  'shape.category.decorative':  'Decorative',
+  // Dimension labels
+  'shape.width':    'Width (mm)',
+  'shape.height':   'Height (mm)',
+  'shape.diameter': 'Diameter (mm)',
   'shape.thickness': 'Thickness (mm)',
 
   // ── Keychain group ─────────────────────────────────────────

@@ -1,4 +1,12 @@
-export type Shape = 'rectangle' | 'oval'
+export type Shape =
+  | 'rectangle'
+  | 'rounded-rectangle'
+  | 'oval'
+  | 'circle'
+  | 'triangle'
+  | 'hexagon'
+  | 'star'
+  | 'heart'
 
 export type TextMode = 'positive' | 'negative' | 'cutout'
 

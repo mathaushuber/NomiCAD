@@ -4,6 +4,11 @@ import { extractRectangleParams } from '../parameters/rectangleParams'
 import { extractOvalParams } from '../parameters/ovalParams'
 import { buildRectangleTag } from '../builders/rectangleTag'
 import { buildOvalTag } from '../builders/ovalTag'
+import { buildCircleTag } from '../builders/circleTag'
+import { buildTriangleTag } from '../builders/triangleTag'
+import { buildHexagonTag } from '../builders/hexagonTag'
+import { buildStarTag } from '../builders/starTag'
+import { buildHeartTag } from '../builders/heartTag'
 import { buildKeyringHole } from '../builders/keyringHole'
 import { buildKeychainTab } from '../builders/keychainTab'
 import { applyText, getTextDimensions } from '../builders/textModes'
@@ -108,16 +113,50 @@ export function buildModel(params: ModelParams): any {
   }
 
   const fontSize = deriveFontSize(params)
-  const { width, height, textOffsetX, textOffsetY } = computeEffectiveDimensions(params, fontSize)
+  let { width, height, textOffsetX, textOffsetY } = computeEffectiveDimensions(params, fontSize)
+
+  // Circle must stay equilateral: expand to the larger effective dimension.
+  if (params.shape === 'circle') {
+    const dim = Math.max(width, height)
+    width  = dim
+    height = dim
+  }
 
   // All downstream builders use the effective (possibly expanded) dimensions.
   const effective: ModelParams = { ...params, width, height }
 
   // ── 1. Base shape ──────────────────────────────────────────────────────
-  let shape: any =
-    effective.shape === 'rectangle'
-      ? buildRectangleTag(extractRectangleParams(effective))
-      : buildOvalTag(extractOvalParams(effective))
+  let shape: any
+  switch (effective.shape) {
+    case 'rectangle':
+      shape = buildRectangleTag(extractRectangleParams(effective))
+      break
+    case 'rounded-rectangle':
+      shape = buildRectangleTag({
+        ...extractRectangleParams(effective),
+        // Use 25 % of the smaller dimension for a distinctly rounder look.
+        cornerRadius: Math.min(effective.width, effective.height) * 0.25,
+      })
+      break
+    case 'oval':
+      shape = buildOvalTag(extractOvalParams(effective))
+      break
+    case 'circle':
+      shape = buildCircleTag({ diameter: effective.width, thickness: effective.thickness })
+      break
+    case 'triangle':
+      shape = buildTriangleTag({ width: effective.width, height: effective.height, thickness: effective.thickness })
+      break
+    case 'hexagon':
+      shape = buildHexagonTag({ width: effective.width, height: effective.height, thickness: effective.thickness })
+      break
+    case 'star':
+      shape = buildStarTag({ width: effective.width, height: effective.height, thickness: effective.thickness })
+      break
+    case 'heart':
+      shape = buildHeartTag({ width: effective.width, height: effective.height, thickness: effective.thickness })
+      break
+  }
 
   // ── 2. Keychain hole ──────────────────────────────────────────────────
   if (effective.isKeychain) {

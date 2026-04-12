@@ -63,18 +63,35 @@ Open `http://localhost:5173` in your browser. The viewer hot-reloads on every fi
 
 These are the parameters accepted by `buildModel()` and available in the interactive sidebar.
 
-| Parameter           | Type                                       | Default        | Description                                   |
-|---------------------|--------------------------------------------|----------------|-----------------------------------------------|
-| `shape`             | `"rectangle" \| "oval"`                   | `"rectangle"`  | Base shape of the tag                         |
-| `width`             | `number` (mm)                              | `60`           | Shape width                                   |
-| `height`            | `number` (mm)                              | `30`           | Shape height                                  |
-| `thickness`         | `number` (mm)                              | `3`            | Shape thickness                               |
-| `isKeychain`        | `boolean`                                  | `true`         | Whether to add a keyring hole                 |
-| `holeDiameter`      | `number` (mm)                              | `5`            | Diameter of the keyring hole                  |
-| `keychainPosition`  | `"top" \| "bottom" \| "left" \| "right"` | `"top"`        | Edge where the keyring hole is placed         |
-| `keychainPlacement` | `"outside" \| "inside"`                  | `"outside"`    | Whether the hole tab protrudes or sits inside |
-| `text`              | `string`                                   | `"NomiCAD"`    | Text to emboss, engrave, or cut through       |
-| `textMode`          | `"positive" \| "negative" \| "cutout"`   | `"negative"`   | How the text is applied to the shape          |
+| Parameter           | Type                                                                                              | Default        | Description                                       |
+|---------------------|---------------------------------------------------------------------------------------------------|----------------|---------------------------------------------------|
+| `shape`             | `"rectangle" \| "rounded-rectangle" \| "oval" \| "circle" \| "triangle" \| "hexagon" \| "star" \| "heart"` | `"rectangle"` | Base shape of the tag |
+| `width`             | `number` (mm)                                                                                     | `60`           | Shape width (or diameter when shape is `circle`) |
+| `height`            | `number` (mm)                                                                                     | `30`           | Shape height (not used for `circle`)              |
+| `thickness`         | `number` (mm)                                                                                     | `3`            | Shape thickness                                   |
+| `isKeychain`        | `boolean`                                                                                         | `true`         | Whether to add a keyring hole                     |
+| `holeDiameter`      | `number` (mm)                                                                                     | `5`            | Diameter of the keyring hole                      |
+| `keychainPosition`  | `"top" \| "bottom" \| "left" \| "right"`                                                        | `"top"`        | Edge where the keyring hole is placed             |
+| `keychainPlacement` | `"outside" \| "inside"`                                                                          | `"outside"`    | Whether the hole tab protrudes or sits inside     |
+| `text`              | `string`                                                                                          | `"NomiCAD"`    | Text to emboss, engrave, or cut through           |
+| `textMode`          | `"positive" \| "negative" \| "cutout"`                                                          | `"negative"`   | How the text is applied to the shape              |
+
+### Shapes
+
+Shapes are grouped into categories in the sidebar select:
+
+| Category   | Shape                | Notes                                                       |
+|------------|----------------------|-------------------------------------------------------------|
+| Basic      | `rectangle`          | Sharp corners with a small automatic radius                 |
+| Basic      | `rounded-rectangle`  | Same as rectangle but with 25% corner radius — no config needed |
+| Basic      | `oval`               | Ellipse scaled to width × height                            |
+| Basic      | `circle`             | Perfect circle; only `width` (diameter) applies             |
+| Geometric  | `triangle`           | Isosceles triangle, apex at top                             |
+| Geometric  | `hexagon`            | Flat-top hexagon scaled to width × height                   |
+| Geometric  | `star`               | 5-pointed star; inner radius = 40% of outer                 |
+| Decorative | `heart`              | Parametric heart curve scaled to width × height             |
+
+All shapes support text modes (positive, negative, cutout), the keychain hole system, and STL export.
 
 ---
 
@@ -87,13 +104,14 @@ src/
 │   ├── theme.ts              # applyTheme() — writes CSS custom properties from config
 │   ├── viewer/               # Three.js rendering layer (scene, camera, lights, renderer)
 │   ├── ui/
-│   │   ├── controls.ts       # DOM control builder (all labels via t())
+│   │   ├── controls.ts       # DOM control builder (grouped select for shapes, all labels via t())
 │   │   ├── state.ts          # Reactive state store; seeds modelColor from config.defaultColor
 │   │   └── watermark.ts      # createWatermark() — permanent library signature element
 │   └── export/               # STL serialization and file download
 ├── core/
 │   ├── parameters/           # Typed parameter interfaces and defaults
-│   ├── builders/             # JSCAD geometry builders per shape and feature
+│   ├── builders/             # JSCAD geometry builders (rectangleTag, ovalTag, circleTag,
+│   │                         #   triangleTag, hexagonTag, starTag, heartTag, keychainTab, …)
 │   ├── text/                 # Text mode implementations (positive, negative, cutout)
 │   └── model/                # Model orchestration, validation, buildModel entry point
 ├── config/
@@ -369,12 +387,14 @@ const geometry = buildModel({
 
 ### Available presets
 
-| Name          | Shape     | Description                    |
-|---------------|-----------|--------------------------------|
-| `keychainTag` | rectangle | Standard tag with keyring hole |
-| `miniTag`     | oval      | Small oval tag                 |
-| `nameplate`   | rectangle | Wide nameplate, no hole        |
-| `pendantOval` | oval      | Oval pendant, no text          |
+| Name           | Shape     | Description                    |
+|----------------|-----------|--------------------------------|
+| `keychainTag`  | rectangle | Standard tag with keyring hole |
+| `miniTag`      | oval      | Small oval tag                 |
+| `nameplate`    | rectangle | Wide nameplate, no hole        |
+| `pendantOval`  | oval      | Oval pendant, no text          |
+| `hexTag`       | hexagon   | Hexagonal tag with keyring     |
+| `heartPendant` | heart     | Heart-shaped pendant           |
 
 ### Convenience wrappers
 
@@ -399,12 +419,13 @@ const geo = oval({ width: 45, height: 30 })
 
 ## Extension points
 
-| Area             | How to extend                                                                  |
-|------------------|--------------------------------------------------------------------------------|
-| New language     | Add `src/i18n/<code>.ts`, register in `index.ts`, add to `SupportedLanguage`  |
-| New config field | Extend `NomiCADConfig` in `types.ts`, add default in `defaults.ts`            |
-| Theme variables  | Add new CSS custom properties in `applyTheme()` and reference them in the CSS  |
-| New shape        | Add a builder in `src/core/builders/`, wire into `buildModel.ts`              |
-| New text mode    | Add an implementation in `src/core/text/`, extend `TextMode` union            |
-| New preset       | Add an entry to `src/library/presets.ts`                                      |
-| Units            | Extend `units` config field and pass it through to slider labels via `t()`    |
+| Area              | How to extend                                                                                    |
+|-------------------|--------------------------------------------------------------------------------------------------|
+| New language      | Add `src/i18n/<code>.ts`, register in `index.ts`, add to `SupportedLanguage`                    |
+| New config field  | Extend `NomiCADConfig` in `types.ts`, add default in `defaults.ts`                              |
+| Theme variables   | Add new CSS custom properties in `applyTheme()` and reference them in the CSS                   |
+| New shape         | Add a builder in `src/core/builders/`, add to `Shape` union, wire into `buildModel.ts`, add i18n keys, add to `controls.ts` select groups |
+| New shape category| Add a new group object to the `selectRow` call in `controls.ts` and a `shape.category.*` i18n key |
+| New text mode     | Add an implementation in `src/core/text/`, extend `TextMode` union                              |
+| New preset        | Add an entry to `src/library/presets.ts`                                                         |
+| Units             | Extend `units` config field and pass it through to slider labels via `t()`                      |

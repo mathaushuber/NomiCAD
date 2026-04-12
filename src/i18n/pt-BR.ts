@@ -8,10 +8,23 @@ const ptBR: Translations = {
   // ── Shape group ────────────────────────────────────────────
   'shape.group':     'Forma',
   'shape.type':      'Tipo',
-  'shape.rectangle': 'Retângulo',
-  'shape.oval':      'Oval',
+  // Shape names
+  'shape.rectangle':         'Retângulo',
+  'shape.rounded-rectangle': 'Retângulo Arredondado',
+  'shape.oval':              'Oval',
+  'shape.circle':            'Círculo',
+  'shape.triangle':          'Triângulo',
+  'shape.hexagon':           'Hexágono',
+  'shape.star':              'Estrela',
+  'shape.heart':             'Coração',
+  // Shape categories
+  'shape.category.basic':      'Básico',
+  'shape.category.geometric':  'Geométrico',
+  'shape.category.decorative': 'Decorativo',
+  // Dimension labels
   'shape.width':     'Largura (mm)',
   'shape.height':    'Altura (mm)',
+  'shape.diameter':  'Diâmetro (mm)',
   'shape.thickness': 'Espessura (mm)',
 
   // ── Keychain group ─────────────────────────────────────────

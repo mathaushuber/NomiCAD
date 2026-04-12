@@ -152,6 +152,39 @@ function segmentRow<T extends string>(
   return row
 }
 
+/** A grouped <select> control for choosing from categorised options. */
+function selectRow<T extends string>(
+  label: string,
+  groups: { group: string; items: { value: T; label: string }[] }[],
+  current: T,
+  onChange: (v: T) => void,
+): HTMLElement {
+  const row = el('div')
+  row.className = 'control-row'
+
+  const lbl = el('label')
+  lbl.textContent = label
+  row.appendChild(lbl)
+
+  const select = el<HTMLSelectElement>('select')
+
+  for (const grp of groups) {
+    const optgroup = el<HTMLOptGroupElement>('optgroup', { label: grp.group })
+    for (const item of grp.items) {
+      const opt = el<HTMLOptionElement>('option', { value: item.value })
+      opt.textContent = item.label
+      if (item.value === current) opt.selected = true
+      optgroup.appendChild(opt)
+    }
+    select.appendChild(optgroup)
+  }
+
+  select.addEventListener('change', () => onChange(select.value as T))
+
+  row.appendChild(select)
+  return row
+}
+
 function colorPickerRow(): HTMLElement {
   const { modelColor } = getState()
 
@@ -185,21 +218,67 @@ export function createControls(): void {
   const { params } = getState()
 
   // ── Shape ──────────────────────────────────────────────────
+  const widthRow     = sliderRow(t('shape.width'),     'width',     20,  120, 1  )
+  const heightRow    = sliderRow(t('shape.height'),    'height',    15,  80,  1  )
+  const thicknessRow = sliderRow(t('shape.thickness'), 'thickness',  1,  10,  0.5)
+
+  // The width label text node is the first child of the <label> element.
+  // We swap it when the shape changes to/from circle (diameter vs width).
+  const widthLabelEl = widthRow.querySelector('label')
+
+  function applyShapeUX(shape: Shape): void {
+    const isCircle = shape === 'circle'
+    heightRow.style.display = isCircle ? 'none' : ''
+    if (widthLabelEl?.childNodes[0]) {
+      widthLabelEl.childNodes[0].textContent =
+        (isCircle ? t('shape.diameter') : t('shape.width')) + ' '
+    }
+  }
+
+  const shapeSelectRow = selectRow<Shape>(
+    t('shape.type'),
+    [
+      {
+        group: t('shape.category.basic'),
+        items: [
+          { value: 'rectangle',         label: t('shape.rectangle')         },
+          { value: 'rounded-rectangle', label: t('shape.rounded-rectangle') },
+          { value: 'oval',              label: t('shape.oval')              },
+          { value: 'circle',            label: t('shape.circle')            },
+        ],
+      },
+      {
+        group: t('shape.category.geometric'),
+        items: [
+          { value: 'triangle', label: t('shape.triangle') },
+          { value: 'hexagon',  label: t('shape.hexagon')  },
+          { value: 'star',     label: t('shape.star')     },
+        ],
+      },
+      {
+        group: t('shape.category.decorative'),
+        items: [
+          { value: 'heart', label: t('shape.heart') },
+        ],
+      },
+    ],
+    params.shape,
+    (v) => {
+      updateParams({ shape: v })
+      applyShapeUX(v)
+    },
+  )
+
+  // Reflect the initial shape in the UI (e.g. if config starts with 'circle').
+  applyShapeUX(params.shape)
+
   container.appendChild(
     group(
       t('shape.group'),
-      segmentRow<Shape>(
-        t('shape.type'),
-        [
-          { value: 'rectangle', label: t('shape.rectangle') },
-          { value: 'oval',      label: t('shape.oval')      },
-        ],
-        params.shape,
-        (v) => updateParams({ shape: v }),
-      ),
-      sliderRow(t('shape.width'),     'width',     20,  120, 1  ),
-      sliderRow(t('shape.height'),    'height',    15,  80,  1  ),
-      sliderRow(t('shape.thickness'), 'thickness',  1,  10,  0.5),
+      shapeSelectRow,
+      widthRow,
+      heightRow,
+      thicknessRow,
     ),
   )
 

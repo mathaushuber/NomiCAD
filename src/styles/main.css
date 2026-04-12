@@ -126,6 +126,22 @@ body {
   cursor: pointer;
 }
 
+.control-row select {
+  width: 100%;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--sidebar-text);
+  padding: 6px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+}
+
+.control-row select:focus {
+  border-color: var(--accent);
+}
+
 .control-row input[type='text'] {
   width: 100%;
   background: var(--surface-alt);

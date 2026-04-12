@@ -1,10 +1,14 @@
-import type { ModelParams, KeychainPosition, KeychainPlacement } from '../parameters/common'
+import type { ModelParams, Shape, KeychainPosition, KeychainPlacement } from '../parameters/common'
 
 export interface ValidationResult {
   valid: boolean
   errors: string[]
 }
 
+const VALID_SHAPES: Shape[] = [
+  'rectangle', 'rounded-rectangle', 'oval', 'circle',
+  'triangle', 'hexagon', 'star', 'heart',
+]
 const VALID_POSITIONS: KeychainPosition[] = ['top', 'bottom', 'left', 'right']
 const VALID_PLACEMENTS: KeychainPlacement[] = ['inside', 'outside']
 
@@ -13,6 +17,10 @@ const INSIDE_MIN_INTERIOR = 12
 
 export function validateParams(params: ModelParams): ValidationResult {
   const errors: string[] = []
+
+  if (!VALID_SHAPES.includes(params.shape)) {
+    errors.push(`shape must be one of: ${VALID_SHAPES.join(', ')}`)
+  }
 
   if (params.width < 10 || params.width > 200) {
     errors.push('Width must be between 10 and 200 mm')
