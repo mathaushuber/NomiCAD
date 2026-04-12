@@ -20,6 +20,14 @@ const H_PAD = 9
 /** Vertical padding between text edge and shape edge (each side, mm). */
 const V_PAD = 5
 
+/**
+ * How far (mm) positive text geometry is embedded below the shape top face
+ * before the union.  Must be large enough that JSCAD and downstream slicers
+ * do not treat the two surfaces as coplanar.  0.01 mm falls within typical
+ * slicer vertex-merge tolerances and caused non-manifold faces in exported STL.
+ */
+const TEXT_POSITIVE_EMBED = 0.2
+
 // ── Interior hole positioning ──────────────────────────────────────────────
 
 function insideHoleXY(
@@ -227,9 +235,9 @@ export function buildModel(params: ModelParams): any {
 
       switch (effective.textMode) {
         case 'positive': {
-          // Embed the text base 0.01 mm into the shape top face to avoid a
-          // coplanar-face degenerate union at exactly z = shapeTop.
-          const p = transforms.translate([textOffsetX, textOffsetY, shapeTop - 0.01], textGeom)
+          // Embed TEXT_POSITIVE_EMBED mm into the shape so the text base is
+          // clearly interior — not coplanar with the shape top face.
+          const p = transforms.translate([textOffsetX, textOffsetY, shapeTop - TEXT_POSITIVE_EMBED], textGeom)
           shape = booleans.union(shape, p)
           break
         }
@@ -240,6 +248,10 @@ export function buildModel(params: ModelParams): any {
           break
         }
         case 'cutout': {
+          // buildCutoutText returns geometry of height (thickness + 2).
+          // Translating from (shapeBottom - 1) places it from shapeBottom-1
+          // to shapeTop+1, protruding 1 mm past each face — matching the
+          // CUTTER_PROTRUSION constant in cutoutText.ts.
           const p = transforms.translate([textOffsetX, textOffsetY, shapeBottom - 1], textGeom)
           shape = booleans.subtract(shape, p)
           break

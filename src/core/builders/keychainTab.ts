@@ -8,6 +8,14 @@ const OVERLAP = 2.5
 const WALL = 3
 
 /**
+ * The tab cylinder is made this much taller than the shape (split equally
+ * above and below) so its top/bottom caps are never coplanar with the shape
+ * faces.  Exact coplanarity in a boolean union can produce non-manifold edges.
+ * 0.02 mm (0.01 mm each side) is invisible but sufficient.
+ */
+const TAB_HEIGHT_EXTRA = 0.02
+
+/**
  * For a flat-top hexagon the top/bottom edge midpoints are inset from the
  * bounding box by a factor of sin(60°) = √3/2.  All other shape edges sit at
  * their bounding-box boundary (or at a vertex that coincides with it).
@@ -74,7 +82,9 @@ export function buildKeychainTab(params: KeychainTabParams): KeychainTabResult {
 
   const tab = transforms.translate(
     [cx, cy, 0],
-    primitives.cylinder({ radius: tabRadius, height: thickness, segments: 48 }),
+    // TAB_HEIGHT_EXTRA makes the tab fractionally taller than the shape so its
+    // top/bottom caps are never coplanar with the shape faces during the union.
+    primitives.cylinder({ radius: tabRadius, height: thickness + TAB_HEIGHT_EXTRA, segments: 48 }),
   )
 
   return { tab, holeX: cx, holeY: cy }
