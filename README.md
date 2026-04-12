@@ -4,6 +4,7 @@ A parametric 3D modeling library for personalized tags and keychains, built with
 
 Model shapes are defined programmatically — change parameters, rebuild the geometry, export to STL. No GUI modeling tool required.
 
+<img src="public/icons/nomicad.svg" alt="NomiCAD Logo"/>
 ---
 
 ## Table of Contents
