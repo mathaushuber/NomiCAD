@@ -66,7 +66,7 @@ const SHAPE_DEFAULTS: Record<Shape, ShapeDefaults> = {
     isKeychain: true, holeDiameter: 5, keychainPosition: 'top', keychainPlacement: 'outside',
   },
   triangle: {
-    width: 60, height: 60, thickness: 3, textSize: 1.0,
+    width: 60, height: 60, thickness: 3, textSize: 0.4,
     isKeychain: true, holeDiameter: 5, keychainPosition: 'top', keychainPlacement: 'outside',
   },
   hexagon: {
@@ -74,11 +74,11 @@ const SHAPE_DEFAULTS: Record<Shape, ShapeDefaults> = {
     isKeychain: true, holeDiameter: 5, keychainPosition: 'top', keychainPlacement: 'outside',
   },
   star: {
-    width: 55, height: 55, thickness: 3, textSize: 1.0,
+    width: 55, height: 55, thickness: 3, textSize: 0.4,
     isKeychain: true, holeDiameter: 5, keychainPosition: 'top', keychainPlacement: 'outside',
   },
   heart: {
-    width: 45, height: 45, thickness: 3, textSize: 1.0,
+    width: 45, height: 45, thickness: 3, textSize: 0.7,
     isKeychain: true, holeDiameter: 5, keychainPosition: 'bottom', keychainPlacement: 'outside',
   },
 }

@@ -1,5 +1,5 @@
 import { booleans, transforms } from '@jscad/modeling'
-import type { ModelParams, KeychainPosition } from '../parameters/common'
+import type { ModelParams, Shape, KeychainPosition } from '../parameters/common'
 import { extractRectangleParams } from '../parameters/rectangleParams'
 import { extractOvalParams } from '../parameters/ovalParams'
 import { buildRectangleTag } from '../builders/rectangleTag'
@@ -10,7 +10,7 @@ import { buildHexagonTag } from '../builders/hexagonTag'
 import { buildStarTag } from '../builders/starTag'
 import { buildHeartTag } from '../builders/heartTag'
 import { buildKeyringHole } from '../builders/keyringHole'
-import { buildKeychainTab } from '../builders/keychainTab'
+import { buildKeychainTab, shapeEdgeDistance } from '../builders/keychainTab'
 import { applyText, getTextDimensions } from '../builders/textModes'
 import { validateParams } from './validators'
 
@@ -23,17 +23,19 @@ const V_PAD = 5
 // ── Interior hole positioning ──────────────────────────────────────────────
 
 function insideHoleXY(
+  shape: Shape,
   position: KeychainPosition,
   width: number,
   height: number,
   holeDiameter: number,
 ): [number, number] {
   const margin = holeDiameter / 2 + 2
+  const edge = shapeEdgeDistance(shape, position, width, height)
   switch (position) {
-    case 'top':    return [0,  height / 2 - margin]
-    case 'bottom': return [0, -(height / 2 - margin)]
-    case 'left':   return [-(width / 2 - margin), 0]
-    case 'right':  return [width / 2 - margin, 0]
+    case 'top':    return [0,  edge - margin]
+    case 'bottom': return [0, -(edge - margin)]
+    case 'left':   return [-(edge - margin), 0]
+    case 'right':  return [edge - margin, 0]
   }
 }
 
@@ -172,11 +174,12 @@ export function buildModel(params: ModelParams): any {
     if (effective.keychainPlacement === 'outside') {
       // Build the external tab and union it with the shape first, then punch the hole.
       const { tab, holeX, holeY } = buildKeychainTab({
-        position:    effective.keychainPosition,
+        shape:        effective.shape,
+        position:     effective.keychainPosition,
         holeDiameter: effective.holeDiameter,
-        thickness:   effective.thickness,
-        shapeWidth:  effective.width,
-        shapeHeight: effective.height,
+        thickness:    effective.thickness,
+        shapeWidth:   effective.width,
+        shapeHeight:  effective.height,
       })
       shape = booleans.union(shape, tab)
       shape = booleans.subtract(
@@ -191,6 +194,7 @@ export function buildModel(params: ModelParams): any {
     } else {
       // Inside: place the hole directly within the shape.
       const [hx, hy] = insideHoleXY(
+        effective.shape,
         effective.keychainPosition,
         effective.width,
         effective.height,
