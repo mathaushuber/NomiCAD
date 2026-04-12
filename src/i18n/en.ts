@@ -47,6 +47,9 @@ const en = {
 
   // ── Actions ────────────────────────────────────────────────
   'export.stl': 'Export STL',
+
+  // ── Watermark ──────────────────────────────────────────────
+  'watermark.credit': 'made by Mathaus Huber',
 } as const
 
 export default en

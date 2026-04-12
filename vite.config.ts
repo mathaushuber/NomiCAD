@@ -1,6 +1,12 @@
 import { defineConfig } from 'vite'
+import { readFileSync } from 'fs'
+
+const pkg = JSON.parse(readFileSync('./package.json', 'utf-8')) as { version: string }
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   optimizeDeps: {
     include: ['@jscad/modeling', '@jscad/stl-serializer'],
   },

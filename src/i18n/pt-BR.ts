@@ -45,6 +45,9 @@ const ptBR: Translations = {
 
   // ── Actions ────────────────────────────────────────────────
   'export.stl': 'Exportar STL',
+
+  // ── Watermark ──────────────────────────────────────────────
+  'watermark.credit': 'feito por Mathaus Huber',
 }
 
 export default ptBR

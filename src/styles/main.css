@@ -11,12 +11,20 @@
   --surface: #13132b;
   --surface-alt: #1a1a35;
   --border: #2a2a50;
-  --accent: #4a9eff;
-  --accent-hover: #6ab0ff;
+  /* --accent and its derivatives are overridden at runtime by applyTheme().
+     The values below are static fallbacks active before JS executes. */
+  --accent:        #4a9eff;
+  --accent-hover:  #6ab0ff;
+  --accent-subtle: rgba(74, 158, 255, 0.07);
+  --accent-border: rgba(74, 158, 255, 0.18);
   --text: #e0e0f0;
   --text-muted: #8888aa;
   --radius: 6px;
   --sidebar-width: 300px;
+  /* --sidebar-bg and --sidebar-text are overridden at runtime by applyTheme().
+     The values below are static fallbacks active before JS executes. */
+  --sidebar-bg:   #13132b;
+  --sidebar-text: #e0e0f0;
 }
 
 html,
@@ -39,8 +47,9 @@ body {
 #sidebar {
   width: var(--sidebar-width);
   flex-shrink: 0;
-  background: var(--surface);
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
+  color: var(--sidebar-text);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -104,7 +113,7 @@ body {
 }
 
 .control-row label span {
-  color: var(--text);
+  color: var(--sidebar-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -119,7 +128,7 @@ body {
   background: var(--surface-alt);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  color: var(--text);
+  color: var(--sidebar-text);
   padding: 6px 10px;
   font-size: 13px;
   outline: none;
@@ -145,7 +154,7 @@ body {
 
 .control-row.row-inline label {
   font-size: 13px;
-  color: var(--text);
+  color: var(--sidebar-text);
 }
 
 .segment-control {
@@ -166,7 +175,7 @@ body {
 }
 
 .segment-control button:hover {
-  color: var(--text);
+  color: var(--sidebar-text);
   border-color: var(--accent);
 }
 
@@ -205,8 +214,8 @@ input[type='color']::-webkit-color-swatch {
 .info-box {
   margin: 6px 18px 2px;
   padding: 10px 12px;
-  background: rgba(74, 158, 255, 0.07);
-  border: 1px solid rgba(74, 158, 255, 0.18);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
   border-radius: var(--radius);
   font-size: 11px;
   line-height: 1.55;
@@ -235,6 +244,23 @@ input[type='color']::-webkit-color-swatch {
 
 #export-stl:hover {
   background: var(--accent-hover);
+}
+
+/* ── Sidebar footer / watermark ──────────────────────────── */
+
+.sidebar-footer {
+  padding: 10px 18px 12px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.watermark {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.6;
+  letter-spacing: 0.2px;
+  user-select: none;
 }
 
 /* ── Viewport ────────────────────────────────────────────── */

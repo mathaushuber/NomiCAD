@@ -1,29 +1,40 @@
 import './styles/main.css'
 import { config } from './config/loadConfig'
+import { applyTheme } from './app/theme'
 import { setLanguage, t } from './i18n/index'
 import { createScene, updateSceneMesh, setMeshColor } from './app/viewer/scene'
 import { createCamera } from './app/viewer/camera'
 import { addLights } from './app/viewer/lights'
 import { createRenderer } from './app/viewer/renderer'
 import { createControls } from './app/ui/controls'
+import { createWatermark } from './app/ui/watermark'
 import { getState, subscribe, updateGeometry } from './app/ui/state'
 import { buildModel } from './core/model/buildModel'
 import { exportStl } from './app/export/exportStl'
 
-// ── i18n bootstrap (must happen before any UI is built) ────────────────────
+// ── Bootstrap (order matters) ──────────────────────────────────────────────
+
+// 1. Apply i18n before any text is rendered.
 setLanguage(config.language)
 
+// 2. Write CSS custom properties before styles are consumed.
+applyTheme(config)
+
 function main(): void {
-  // ── Apply translations to static HTML elements ──────────────────────────
-  const logoEl    = document.querySelector('.logo')
+  // ── Static element text ────────────────────────────────────────────────
+  const logoEl     = document.querySelector('.logo')
   const subtitleEl = document.querySelector('.subtitle')
   const exportBtn  = document.getElementById('export-stl')
 
-  if (logoEl)     logoEl.textContent     = t('app.title')
+  // projectName drives the visible title; t('app.subtitle') stays localized.
+  if (logoEl)     logoEl.textContent     = config.projectName
   if (subtitleEl) subtitleEl.textContent = t('app.subtitle')
   if (exportBtn)  exportBtn.textContent  = t('export.stl')
 
-  // ── Viewer setup ────────────────────────────────────────────────────────
+  // Sync the browser tab title with the configured project name.
+  document.title = config.projectName
+
+  // ── Viewer setup ───────────────────────────────────────────────────────
   const canvas = document.getElementById('canvas') as HTMLCanvasElement
 
   const scene = createScene()
@@ -31,10 +42,14 @@ function main(): void {
   addLights(scene)
   createRenderer(canvas, camera, scene)
 
-  // ── UI ──────────────────────────────────────────────────────────────────
+  // ── UI ─────────────────────────────────────────────────────────────────
   createControls()
 
-  // ── Model rebuild ───────────────────────────────────────────────────────
+  // Append the permanent watermark footer to the sidebar.
+  const sidebar = document.getElementById('sidebar')
+  if (sidebar) sidebar.appendChild(createWatermark())
+
+  // ── Model rebuild ──────────────────────────────────────────────────────
   function rebuild(): void {
     const { params, modelColor } = getState()
     try {

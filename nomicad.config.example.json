@@ -1,5 +1,8 @@
 {
   "language": "en",
   "defaultColor": "#4a9eff",
-  "units": "mm"
+  "units": "mm",
+  "projectName": "NomiCAD",
+  "sidebarBackgroundColor": "#13132b",
+  "sidebarTextColor": "#e0e0f0"
 }
