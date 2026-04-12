@@ -1,0 +1,44 @@
+import type { ModelParams } from '../core/parameters/common'
+
+export const PRESETS: Record<string, ModelParams> = {
+  keychainTag: {
+    shape: 'rectangle',
+    width: 60,
+    height: 28,
+    thickness: 3,
+    isKeychain: true,
+    holeDiameter: 5,
+    text: 'My Tag',
+    textMode: 'negative',
+  },
+  miniTag: {
+    shape: 'oval',
+    width: 40,
+    height: 22,
+    thickness: 2.5,
+    isKeychain: true,
+    holeDiameter: 4,
+    text: 'Mini',
+    textMode: 'negative',
+  },
+  nameplate: {
+    shape: 'rectangle',
+    width: 80,
+    height: 30,
+    thickness: 4,
+    isKeychain: false,
+    holeDiameter: 5,
+    text: 'Name',
+    textMode: 'positive',
+  },
+  pendantOval: {
+    shape: 'oval',
+    width: 50,
+    height: 35,
+    thickness: 3,
+    isKeychain: true,
+    holeDiameter: 5,
+    text: '',
+    textMode: 'negative',
+  },
+}

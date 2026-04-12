@@ -1,0 +1,7 @@
+export { buildModel } from '../core/model/buildModel'
+export { validateParams } from '../core/model/validators'
+export { DEFAULT_PARAMS } from '../core/parameters/common'
+export type { ModelParams, Shape, TextMode } from '../core/parameters/common'
+export type { ValidationResult } from '../core/model/validators'
+export { rectangle, oval } from './shapes'
+export { PRESETS } from './presets'

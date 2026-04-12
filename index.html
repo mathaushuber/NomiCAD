@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NomiCAD</title>
+  </head>
+  <body>
+    <div id="app">
+      <aside id="sidebar">
+        <header class="sidebar-header">
+          <span class="logo">NomiCAD</span>
+          <span class="subtitle">Parametric Modeling</span>
+        </header>
+        <div id="controls"></div>
+        <div class="export-section">
+          <button id="export-stl">Export STL</button>
+        </div>
+      </aside>
+      <main id="viewport">
+        <canvas id="canvas"></canvas>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
