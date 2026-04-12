@@ -1,5 +1,9 @@
 import { DEFAULT_PARAMS } from '../../core/parameters/common'
 import type { ModelParams } from '../../core/parameters/common'
+import {
+  normalizeKeychainForShape,
+  applyShapeChange,
+} from '../../core/parameters/shapeConstraints'
 import { config } from '../../config/loadConfig'
 
 export const DEFAULT_MODEL_COLOR = config.defaultColor
@@ -29,7 +33,21 @@ export function getState(): AppState {
 }
 
 export function updateParams(partial: Partial<ModelParams>): void {
-  state = { ...state, params: { ...state.params, ...partial } }
+  let next: ModelParams
+
+  if (partial.shape !== undefined && partial.shape !== state.params.shape) {
+    // Shape change: reset to new shape's defaults, preserve text content/mode.
+    next = applyShapeChange(state.params, partial.shape)
+    // Apply any other explicit overrides from the caller (rare, but supported).
+    const { shape: _shape, ...rest } = partial
+    if (Object.keys(rest).length > 0) {
+      next = normalizeKeychainForShape({ ...next, ...rest })
+    }
+  } else {
+    next = normalizeKeychainForShape({ ...state.params, ...partial })
+  }
+
+  state = { ...state, params: next }
   notify()
 }
 

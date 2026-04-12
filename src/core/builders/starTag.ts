@@ -21,8 +21,8 @@ export function buildStarTag({ width, height, thickness }: StarParams): any {
 
   const points: [number, number][] = []
   for (let i = 0; i < NUM_POINTS * 2; i++) {
-    // Start at the top (−π/2) and step by π/NUM_POINTS.
-    const angle = (Math.PI * i) / NUM_POINTS - Math.PI / 2
+    // Start at the top (+π/2) and step by π/NUM_POINTS, producing CCW winding.
+    const angle = (Math.PI * i) / NUM_POINTS + Math.PI / 2
     const rx = i % 2 === 0 ? outerRx : innerRx
     const ry = i % 2 === 0 ? outerRy : innerRy
     points.push([rx * Math.cos(angle), ry * Math.sin(angle)])

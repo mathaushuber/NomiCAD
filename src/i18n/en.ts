@@ -46,6 +46,7 @@ const en = {
   'text.group':       'Text',
   'text.content':     'Content',
   'text.placeholder': 'Enter text...',
+  'text.size':        'Text Size',
   'text.mode':        'Mode',
   'text.mode.raised': 'Raised',
   'text.mode.inset':  'Inset',

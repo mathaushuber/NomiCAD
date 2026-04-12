@@ -44,6 +44,7 @@ const ptBR: Translations = {
   'text.group':       'Texto',
   'text.content':     'Conteúdo',
   'text.placeholder': 'Digite o texto...',
+  'text.size':        'Tamanho do Texto',
   'text.mode':        'Modo',
   'text.mode.raised': 'Relevo',
   'text.mode.inset':  'Rebaixado',

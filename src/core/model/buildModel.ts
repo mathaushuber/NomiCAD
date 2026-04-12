@@ -46,13 +46,22 @@ interface EffectiveDimensions {
   textOffsetY: number
 }
 
+/** Minimum safe font size for JSCAD geometry (mm). Below this, geometry becomes degenerate. */
+const MIN_FONT_SIZE = 0.1
+
 /**
- * Derives the font size from the user-specified shape dimensions.
- * Computed before any auto-scaling so the text size stays constant and
- * it is the shape that grows to fit.
+ * Derives the effective font size by combining the auto-fit base size with
+ * the user's `textSize` multiplier.
+ *
+ * Base size is proportional to the shape dimensions so that the default
+ * (textSize = 1.0) always produces well-fitting text. `textSize` then scales
+ * that base up or down. The result is clamped to MIN_FONT_SIZE to keep
+ * geometry valid at very small multipliers.
  */
 function deriveFontSize(params: ModelParams): number {
-  return Math.min(params.height * 0.32, params.width * 0.1, 9)
+  const base = Math.min(params.height * 0.32, params.width * 0.1, 9)
+  const clamped = Math.max(0.3, Math.min(3.0, params.textSize))
+  return Math.max(MIN_FONT_SIZE, base * clamped)
 }
 
 /**
@@ -214,7 +223,9 @@ export function buildModel(params: ModelParams): any {
 
       switch (effective.textMode) {
         case 'positive': {
-          const p = transforms.translate([textOffsetX, textOffsetY, shapeTop], textGeom)
+          // Embed the text base 0.01 mm into the shape top face to avoid a
+          // coplanar-face degenerate union at exactly z = shapeTop.
+          const p = transforms.translate([textOffsetX, textOffsetY, shapeTop - 0.01], textGeom)
           shape = booleans.union(shape, p)
           break
         }

@@ -25,6 +25,11 @@ export interface ModelParams {
   keychainPlacement: KeychainPlacement
   text: string
   textMode: TextMode
+  /**
+   * Multiplier applied to the auto-derived font size.
+   * 1.0 = default auto-fit size. Valid range: 0.3 – 3.0.
+   */
+  textSize: number
 }
 
 export const DEFAULT_PARAMS: ModelParams = {
@@ -38,4 +43,5 @@ export const DEFAULT_PARAMS: ModelParams = {
   keychainPlacement: 'outside',
   text: 'NomiCAD',
   textMode: 'negative',
+  textSize: 1.0,
 }

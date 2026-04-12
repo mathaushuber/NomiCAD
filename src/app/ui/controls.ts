@@ -1,5 +1,6 @@
 import { getState, updateParams, updateColor } from './state'
-import type { Shape, TextMode, KeychainPosition, KeychainPlacement } from '../../core/parameters/common'
+import type { Shape, TextMode, KeychainPosition, KeychainPlacement, ModelParams } from '../../core/parameters/common'
+import { getKeychainConstraint } from '../../core/parameters/shapeConstraints'
 import { t } from '../../i18n/index'
 
 // ── DOM helpers ────────────────────────────────────────────────────────────
@@ -54,6 +55,7 @@ function sliderRow(
     max: String(max),
     step: String(step),
     value: String(value),
+    'data-key': key as string,
   })
 
   input.addEventListener('input', () => {
@@ -105,7 +107,7 @@ function checkboxRow(
   const lbl = el('label')
   lbl.textContent = label
 
-  const input = el<HTMLInputElement>('input', { type: 'checkbox' })
+  const input = el<HTMLInputElement>('input', { type: 'checkbox', 'data-key': key as string })
   input.checked = params[key] as boolean
 
   input.addEventListener('change', () => {
@@ -226,13 +228,69 @@ export function createControls(): void {
   // We swap it when the shape changes to/from circle (diameter vs width).
   const widthLabelEl = widthRow.querySelector('label')
 
+  // Built below — need forward references so applyShapeUX can reach them.
+  let placementSegRow: HTMLElement
+  let positionSegRow: HTMLElement
+
   function applyShapeUX(shape: Shape): void {
+    // Circle: hide height row, relabel width → diameter.
     const isCircle = shape === 'circle'
     heightRow.style.display = isCircle ? 'none' : ''
     if (widthLabelEl?.childNodes[0]) {
       widthLabelEl.childNodes[0].textContent =
         (isCircle ? t('shape.diameter') : t('shape.width')) + ' '
     }
+
+    // Constrained shapes: show only valid placement/position options and sync active states.
+    const constraint = getKeychainConstraint(shape)
+    const { params } = getState()
+
+    if (placementSegRow) {
+      placementSegRow
+        .querySelectorAll<HTMLButtonElement>('.segment-control button')
+        .forEach((btn) => {
+          const val = btn.dataset['value'] as KeychainPlacement
+          if (constraint) {
+            const isAllowed = constraint.allowedPlacements.includes(val)
+            btn.style.display = isAllowed ? '' : 'none'
+            btn.classList.toggle('active', isAllowed && val === params.keychainPlacement)
+          } else {
+            btn.style.display = ''
+            btn.classList.toggle('active', val === params.keychainPlacement)
+          }
+        })
+    }
+
+    if (positionSegRow) {
+      positionSegRow
+        .querySelectorAll<HTMLButtonElement>('.segment-control button')
+        .forEach((btn) => {
+          const val = btn.dataset['value'] as KeychainPosition
+          if (constraint) {
+            const isAllowed = constraint.allowedPositions.includes(val)
+            btn.style.display = isAllowed ? '' : 'none'
+            btn.classList.toggle('active', isAllowed && val === params.keychainPosition)
+          } else {
+            btn.style.display = ''
+            btn.classList.toggle('active', val === params.keychainPosition)
+          }
+        })
+    }
+
+    // Sync all slider and checkbox DOM elements to the current state values.
+    // This ensures the UI reflects shape-change parameter resets applied in state.
+    container!.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((input) => {
+      const key = input.dataset['key'] as keyof ModelParams
+      if (!(key in params)) return
+      const v = params[key]
+      if (input.type === 'range') {
+        input.value = String(v)
+        const span = input.closest('.control-row')?.querySelector<HTMLSpanElement>('label span')
+        if (span) span.textContent = String(v)
+      } else if (input.type === 'checkbox') {
+        input.checked = v as boolean
+      }
+    })
   }
 
   const shapeSelectRow = selectRow<Shape>(
@@ -269,9 +327,6 @@ export function createControls(): void {
     },
   )
 
-  // Reflect the initial shape in the UI (e.g. if config starts with 'circle').
-  applyShapeUX(params.shape)
-
   container.appendChild(
     group(
       t('shape.group'),
@@ -285,33 +340,41 @@ export function createControls(): void {
   container.appendChild(divider())
 
   // ── Keychain ───────────────────────────────────────────────
+  placementSegRow = segmentRow<KeychainPlacement>(
+    t('keychain.placement'),
+    [
+      { value: 'outside', label: t('keychain.placement.outside') },
+      { value: 'inside',  label: t('keychain.placement.inside')  },
+    ],
+    params.keychainPlacement,
+    (v) => updateParams({ keychainPlacement: v }),
+  )
+
+  positionSegRow = segmentRow<KeychainPosition>(
+    t('keychain.position'),
+    [
+      { value: 'top',    label: t('keychain.position.top')    },
+      { value: 'bottom', label: t('keychain.position.bottom') },
+      { value: 'left',   label: t('keychain.position.left')   },
+      { value: 'right',  label: t('keychain.position.right')  },
+    ],
+    params.keychainPosition,
+    (v) => updateParams({ keychainPosition: v }),
+  )
+
   container.appendChild(
     group(
       t('keychain.group'),
       checkboxRow(t('keychain.enable'),   'isKeychain'),
       sliderRow(t('keychain.diameter'), 'holeDiameter', 2, 12, 0.5),
-      segmentRow<KeychainPlacement>(
-        t('keychain.placement'),
-        [
-          { value: 'outside', label: t('keychain.placement.outside') },
-          { value: 'inside',  label: t('keychain.placement.inside')  },
-        ],
-        params.keychainPlacement,
-        (v) => updateParams({ keychainPlacement: v }),
-      ),
-      segmentRow<KeychainPosition>(
-        t('keychain.position'),
-        [
-          { value: 'top',    label: t('keychain.position.top')    },
-          { value: 'bottom', label: t('keychain.position.bottom') },
-          { value: 'left',   label: t('keychain.position.left')   },
-          { value: 'right',  label: t('keychain.position.right')  },
-        ],
-        params.keychainPosition,
-        (v) => updateParams({ keychainPosition: v }),
-      ),
+      placementSegRow,
+      positionSegRow,
     ),
   )
+
+  // Reflect the initial shape in the UI now that all rows exist.
+  // This handles circle (height row / label) and shape constraints (placement/position buttons).
+  applyShapeUX(params.shape)
 
   container.appendChild(divider())
 
@@ -320,6 +383,7 @@ export function createControls(): void {
     group(
       t('text.group'),
       textRow(t('text.content'), 'text'),
+      sliderRow(t('text.size'), 'textSize', 0.1, 2.0, 0.1),
       segmentRow<TextMode>(
         t('text.mode'),
         [

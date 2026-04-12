@@ -42,10 +42,13 @@ export function buildHeartTag({ width, height, thickness }: HeartParams): any {
   const scaleX = width  / (maxX - minX)
   const scaleY = height / (maxY - minY)
 
-  const points: [number, number][] = raw.map(([x, y]) => [
+  // Reverse to ensure CCW winding (JSCAD convention for outward-facing normals).
+  // The raw parametric curve traverses CW; reversing makes it CCW so that
+  // boolean operations (subtract for holes/text, union for tabs) work correctly.
+  const points: [number, number][] = raw.map(([x, y]): [number, number] => [
     (x - cx) * scaleX,
     (y - cy) * scaleY,
-  ])
+  ]).reverse()
 
   const polygon = primitives.polygon({ points })
   const extruded = extrusions.extrudeLinear({ height: thickness }, polygon)

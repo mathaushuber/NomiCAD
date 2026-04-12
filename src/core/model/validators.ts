@@ -1,4 +1,5 @@
 import type { ModelParams, Shape, KeychainPosition, KeychainPlacement } from '../parameters/common'
+import { getKeychainConstraint } from '../parameters/shapeConstraints'
 
 export interface ValidationResult {
   valid: boolean
@@ -34,6 +35,10 @@ export function validateParams(params: ModelParams): ValidationResult {
     errors.push('Thickness must be between 1 and 20 mm')
   }
 
+  if (params.textSize < 0.1 || params.textSize > 3.0) {
+    errors.push('Text size must be between 0.1 and 3.0')
+  }
+
   if (!VALID_POSITIONS.includes(params.keychainPosition)) {
     errors.push(`keychainPosition must be one of: ${VALID_POSITIONS.join(', ')}`)
   }
@@ -45,6 +50,23 @@ export function validateParams(params: ModelParams): ValidationResult {
   if (params.isKeychain) {
     if (params.holeDiameter < 2 || params.holeDiameter > 15) {
       errors.push('Hole diameter must be between 2 and 15 mm')
+    }
+
+    // Shape-specific keychain restrictions (centralized in shapeConstraints).
+    const constraint = getKeychainConstraint(params.shape)
+    if (constraint) {
+      if (!constraint.allowedPlacements.includes(params.keychainPlacement)) {
+        errors.push(
+          `${params.shape} shape does not support "${params.keychainPlacement}" keychain placement ` +
+          `(allowed: ${constraint.allowedPlacements.join(', ')})`,
+        )
+      }
+      if (!constraint.allowedPositions.includes(params.keychainPosition)) {
+        errors.push(
+          `${params.shape} shape does not support "${params.keychainPosition}" keychain position ` +
+          `(allowed: ${constraint.allowedPositions.join(', ')})`,
+        )
+      }
     }
 
     if (params.keychainPlacement === 'inside') {

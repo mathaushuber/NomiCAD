@@ -12,6 +12,7 @@ export const PRESETS: Record<string, ModelParams> = {
     keychainPlacement: 'outside',
     text: 'My Tag',
     textMode: 'negative',
+    textSize: 1.0,
   },
   miniTag: {
     shape: 'oval',
@@ -24,6 +25,7 @@ export const PRESETS: Record<string, ModelParams> = {
     keychainPlacement: 'outside',
     text: 'Mini',
     textMode: 'negative',
+    textSize: 1.0,
   },
   nameplate: {
     shape: 'rectangle',
@@ -36,6 +38,7 @@ export const PRESETS: Record<string, ModelParams> = {
     keychainPlacement: 'outside',
     text: 'Name',
     textMode: 'positive',
+    textSize: 1.0,
   },
   pendantOval: {
     shape: 'oval',
@@ -48,6 +51,7 @@ export const PRESETS: Record<string, ModelParams> = {
     keychainPlacement: 'outside',
     text: '',
     textMode: 'negative',
+    textSize: 1.0,
   },
   hexTag: {
     shape: 'hexagon',
@@ -60,6 +64,7 @@ export const PRESETS: Record<string, ModelParams> = {
     keychainPlacement: 'outside',
     text: 'HEX',
     textMode: 'negative',
+    textSize: 1.0,
   },
   heartPendant: {
     shape: 'heart',
@@ -68,9 +73,10 @@ export const PRESETS: Record<string, ModelParams> = {
     thickness: 3,
     isKeychain: true,
     holeDiameter: 4,
-    keychainPosition: 'top',
+    keychainPosition: 'bottom',
     keychainPlacement: 'outside',
     text: '',
     textMode: 'negative',
+    textSize: 1.0,
   },
 }

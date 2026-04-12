@@ -75,6 +75,7 @@ These are the parameters accepted by `buildModel()` and available in the interac
 | `keychainPlacement` | `"outside" \| "inside"`                                                                          | `"outside"`    | Whether the hole tab protrudes or sits inside     |
 | `text`              | `string`                                                                                          | `"NomiCAD"`    | Text to emboss, engrave, or cut through           |
 | `textMode`          | `"positive" \| "negative" \| "cutout"`                                                          | `"negative"`   | How the text is applied to the shape              |
+| `textSize`          | `number` (0.3 – 3.0)                                                                             | `1.0`          | Multiplier on the auto-fit font size              |
 
 ### Shapes
 
@@ -91,7 +92,18 @@ Shapes are grouped into categories in the sidebar select:
 | Geometric  | `star`               | 5-pointed star; inner radius = 40% of outer                 |
 | Decorative | `heart`              | Parametric heart curve scaled to width × height             |
 
-All shapes support text modes (positive, negative, cutout), the keychain hole system, and STL export.
+All shapes support text modes (positive, negative, cutout), `textSize` scaling, the keychain hole system, and STL export.
+
+### Text sizing
+
+Text rendering uses a two-step sizing model:
+
+1. **Auto-fit base** — `deriveFontSize` computes a base font size proportional to the shape dimensions (`min(height × 0.32, width × 0.1, 9)`). This guarantees sensible default text for any shape size.
+2. **User multiplier** — `textSize` scales that base. At `1.0` the text fits naturally; values below `1.0` shrink it, values above `1.0` grow it.
+
+When `textSize > 1.0` causes the text to be larger than the shape's current dimensions, the shape automatically expands to fit — the same auto-expansion that already runs at the default size. Text never escapes the shape boundary.
+
+Valid range: `0.3` – `3.0`. Values outside this range are rejected by the validator. `deriveFontSize` additionally clamps the computed pixel size to a minimum of `0.5 mm` to prevent degenerate geometry at very small multipliers.
 
 ---
 
