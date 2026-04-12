@@ -8,6 +8,7 @@ import { addLights } from './app/viewer/lights'
 import { createRenderer } from './app/viewer/renderer'
 import { createControls } from './app/ui/controls'
 import { createWatermark } from './app/ui/watermark'
+import { createDimensionsOverlay } from './app/ui/dimensionsOverlay'
 import { getState, subscribe, updateGeometry } from './app/ui/state'
 import { buildModel } from './core/model/buildModel'
 import { exportStl } from './app/export/exportStl'
@@ -49,6 +50,11 @@ function main(): void {
   const sidebar = document.getElementById('sidebar')
   if (sidebar) sidebar.appendChild(createWatermark())
 
+  // Mount the dimensions overlay inside the viewport.
+  const viewport = document.getElementById('viewport')
+  const dimOverlay = createDimensionsOverlay()
+  if (viewport) viewport.appendChild(dimOverlay.element)
+
   // ── Model rebuild ──────────────────────────────────────────────────────
   function rebuild(): void {
     const { params, modelColor } = getState()
@@ -58,6 +64,7 @@ function main(): void {
       updateSceneMesh(scene, geometry)
       // Re-apply color after mesh swap (new material resets to default).
       setMeshColor(modelColor)
+      dimOverlay.update(geometry)
     } catch (err) {
       console.error('[NomiCAD] Model build error:', err)
     }

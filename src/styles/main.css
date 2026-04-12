@@ -295,3 +295,46 @@ input[type='color']::-webkit-color-swatch {
   width: 100%;
   height: 100%;
 }
+
+/* ── Dimensions overlay ──────────────────────────────────── */
+
+#dim-overlay {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: rgba(13, 13, 26, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 14px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  user-select: none;
+  z-index: 10;
+  min-width: 110px;
+}
+
+.dim-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  line-height: 1.7;
+}
+
+.dim-axis {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  width: 10px;
+  flex-shrink: 0;
+}
+
+.dim-value {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, 'SF Mono', 'Fira Code', monospace;
+  color: rgba(224, 224, 240, 0.85);
+  letter-spacing: 0.02em;
+}
