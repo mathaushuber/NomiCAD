@@ -1,5 +1,12 @@
 import type { ModelParams } from '../core/parameters/common'
 
+const TEXT_DEFAULTS = {
+  textOffsetX: 0,
+  textOffsetY: 0,
+  textReliefDepth: 1.2,
+  textInsetDepth: 1.2,
+} as const
+
 export const PRESETS: Record<string, ModelParams> = {
   keychainTag: {
     shape: 'rectangle',
@@ -13,6 +20,7 @@ export const PRESETS: Record<string, ModelParams> = {
     text: 'My Tag',
     textMode: 'negative',
     textSize: 1.0,
+    ...TEXT_DEFAULTS,
   },
   miniTag: {
     shape: 'oval',
@@ -26,6 +34,7 @@ export const PRESETS: Record<string, ModelParams> = {
     text: 'Mini',
     textMode: 'negative',
     textSize: 1.0,
+    ...TEXT_DEFAULTS,
   },
   nameplate: {
     shape: 'rectangle',
@@ -39,6 +48,7 @@ export const PRESETS: Record<string, ModelParams> = {
     text: 'Name',
     textMode: 'positive',
     textSize: 1.0,
+    ...TEXT_DEFAULTS,
   },
   pendantOval: {
     shape: 'oval',
@@ -52,6 +62,7 @@ export const PRESETS: Record<string, ModelParams> = {
     text: '',
     textMode: 'negative',
     textSize: 1.0,
+    ...TEXT_DEFAULTS,
   },
   hexTag: {
     shape: 'hexagon',
@@ -65,6 +76,7 @@ export const PRESETS: Record<string, ModelParams> = {
     text: 'HEX',
     textMode: 'negative',
     textSize: 1.0,
+    ...TEXT_DEFAULTS,
   },
   heartPendant: {
     shape: 'heart',
@@ -78,5 +90,6 @@ export const PRESETS: Record<string, ModelParams> = {
     text: '',
     textMode: 'negative',
     textSize: 1.0,
+    ...TEXT_DEFAULTS,
   },
 }

@@ -30,6 +30,27 @@ export interface ModelParams {
    * 1.0 = default auto-fit size. Valid range: 0.3 – 3.0.
    */
   textSize: number
+  /**
+   * User-defined additional horizontal text offset (mm).
+   * 0 = auto-centered (or hole-avoidance baseline).
+   * Positive = right, negative = left. Clamped to shape bounds at build time.
+   */
+  textOffsetX: number
+  /**
+   * User-defined additional vertical text offset (mm).
+   * 0 = auto-centered (or hole-avoidance baseline).
+   * Positive = up, negative = down. Clamped to shape bounds at build time.
+   */
+  textOffsetY: number
+  /**
+   * Height of raised text above the shape surface in positive (raised) mode (mm).
+   */
+  textReliefDepth: number
+  /**
+   * Depth of engraved pocket in negative (inset) mode (mm).
+   * Clamped to a safe fraction of thickness at build time.
+   */
+  textInsetDepth: number
 }
 
 export const DEFAULT_PARAMS: ModelParams = {
@@ -44,4 +65,8 @@ export const DEFAULT_PARAMS: ModelParams = {
   text: 'NomiCAD',
   textMode: 'negative',
   textSize: 1.0,
+  textOffsetX: 0,
+  textOffsetY: 0,
+  textReliefDepth: 1.2,
+  textInsetDepth: 1.2,
 }

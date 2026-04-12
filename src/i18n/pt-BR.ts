@@ -41,14 +41,18 @@ const ptBR: Translations = {
   'keychain.position.right':    'Direita',
 
   // ── Text group ─────────────────────────────────────────────
-  'text.group':       'Texto',
-  'text.content':     'Conteúdo',
-  'text.placeholder': 'Digite o texto...',
-  'text.size':        'Tamanho do Texto',
-  'text.mode':        'Modo',
-  'text.mode.raised': 'Relevo',
-  'text.mode.inset':  'Rebaixado',
-  'text.mode.cutout': 'Recorte',
+  'text.group':        'Texto',
+  'text.content':      'Conteúdo',
+  'text.placeholder':  'Digite o texto...',
+  'text.size':         'Tamanho do Texto',
+  'text.mode':         'Modo',
+  'text.mode.raised':  'Relevo',
+  'text.mode.inset':   'Rebaixado',
+  'text.mode.cutout':  'Recorte',
+  'text.offsetX':      'Deslocamento Horizontal (mm)',
+  'text.offsetY':      'Deslocamento Vertical (mm)',
+  'text.reliefDepth':  'Altura do Relevo (mm)',
+  'text.insetDepth':   'Profundidade do Rebaixo (mm)',
 
   // ── Display group ──────────────────────────────────────────
   'display.group':     'Exibição',

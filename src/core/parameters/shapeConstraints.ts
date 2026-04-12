@@ -13,77 +13,73 @@ export interface ShapeKeychainConstraint {
   defaultPosition: KeychainPosition
 }
 
-const SHAPE_KEYCHAIN_CONSTRAINTS: Partial<Record<Shape, ShapeKeychainConstraint>> = {
-  // Star: apex at top is the only clean attachment point; concave indentations
-  // make left/right/bottom tabs look broken. Inside placement is too shallow.
-  star: {
-    allowedPlacements: ['outside'],
-    allowedPositions:  ['top'],
-    defaultPlacement:  'outside',
-    defaultPosition:   'top',
-  },
-  // Heart: concave cleft at the top makes top-position tabs float disconnected.
-  // Bottom (sharp tip) is the only clean attachment point.
-  heart: {
-    allowedPlacements: ['outside'],
-    allowedPositions:  ['bottom'],
-    defaultPlacement:  'outside',
-    defaultPosition:   'bottom',
-  },
-  // Triangle: left/right would attach to slanted faces with no flat reference;
-  // top and bottom work cleanly on horizontal edges.
-  triangle: {
-    allowedPlacements: ['outside', 'inside'],
-    allowedPositions:  ['top', 'bottom'],
-    defaultPlacement:  'outside',
-    defaultPosition:   'top',
-  },
-}
+/**
+ * All shapes now support every combination of placement (inside/outside) and
+ * position (top/bottom/left/right).  The geometry pipeline's OVERLAP constant
+ * and shape-edge-distance calculation ensure the tab or hole stays attached
+ * regardless of the selected shape.  Previous per-shape restrictions are
+ * intentionally removed.
+ */
+const SHAPE_KEYCHAIN_CONSTRAINTS: Partial<Record<Shape, ShapeKeychainConstraint>> = {}
 
-// ── Shape defaults ─────────────────────────────────────────────────────────
+// ── Shape defaults ────────────────────────────────���────────────────────────
 
-/** Subset of ModelParams that is reset when the user switches shape. */
+/**
+ * Subset of ModelParams that is reset when the user switches shape.
+ * textOffsetX/Y are included so they reset to 0 when the shape (and therefore
+ * the coordinate space) changes.  textReliefDepth/textInsetDepth are NOT
+ * included — they are style preferences preserved across shape changes.
+ */
 export type ShapeDefaults = Pick<ModelParams,
   | 'width' | 'height' | 'thickness' | 'textSize'
   | 'isKeychain' | 'holeDiameter' | 'keychainPosition' | 'keychainPlacement'
+  | 'textOffsetX' | 'textOffsetY'
 >
 
 const SHAPE_DEFAULTS: Record<Shape, ShapeDefaults> = {
   rectangle: {
     width: 60, height: 30, thickness: 3, textSize: 1.0,
     isKeychain: true, holeDiameter: 5, keychainPosition: 'top', keychainPlacement: 'outside',
+    textOffsetX: 0, textOffsetY: 0,
   },
   'rounded-rectangle': {
     width: 60, height: 30, thickness: 3, textSize: 1.0,
     isKeychain: true, holeDiameter: 5, keychainPosition: 'top', keychainPlacement: 'outside',
+    textOffsetX: 0, textOffsetY: 0,
   },
   oval: {
     width: 50, height: 30, thickness: 3, textSize: 1.0,
     isKeychain: true, holeDiameter: 5, keychainPosition: 'top', keychainPlacement: 'outside',
+    textOffsetX: 0, textOffsetY: 0,
   },
   circle: {
     width: 40, height: 40, thickness: 3, textSize: 1.0,
     isKeychain: true, holeDiameter: 5, keychainPosition: 'top', keychainPlacement: 'outside',
+    textOffsetX: 0, textOffsetY: 0,
   },
   triangle: {
     width: 60, height: 60, thickness: 3, textSize: 0.4,
     isKeychain: true, holeDiameter: 5, keychainPosition: 'top', keychainPlacement: 'outside',
+    textOffsetX: 0, textOffsetY: 0,
   },
   hexagon: {
     width: 50, height: 50, thickness: 3, textSize: 1.0,
     isKeychain: true, holeDiameter: 5, keychainPosition: 'top', keychainPlacement: 'outside',
+    textOffsetX: 0, textOffsetY: 0,
   },
   star: {
     width: 55, height: 55, thickness: 3, textSize: 0.4,
     isKeychain: true, holeDiameter: 5, keychainPosition: 'top', keychainPlacement: 'outside',
+    textOffsetX: 0, textOffsetY: 0,
   },
   heart: {
     width: 45, height: 45, thickness: 3, textSize: 0.7,
     isKeychain: true, holeDiameter: 5, keychainPosition: 'bottom', keychainPlacement: 'outside',
+    textOffsetX: 0, textOffsetY: 0,
   },
 }
 
-// ── Public API ─────────────────────────────────────────────────────────────
+// ── Public API ─────────────────────────────��───────────────────────────────
 
 /** Returns the keychain constraint for a shape, or null if unrestricted. */
 export function getKeychainConstraint(shape: Shape): ShapeKeychainConstraint | null {
@@ -97,8 +93,8 @@ export function getShapeDefaults(shape: Shape): ShapeDefaults {
 
 /**
  * Normalises keychainPlacement / keychainPosition to values that are
- * permitted for the shape. For unconstrained shapes the params are returned
- * unchanged.
+ * permitted for the shape.  With no constraints defined this is always a
+ * no-op, but the function is kept for API stability.
  */
 export function normalizeKeychainForShape(params: ModelParams): ModelParams {
   const c = getKeychainConstraint(params.shape)
@@ -121,19 +117,21 @@ export function normalizeKeychainForShape(params: ModelParams): ModelParams {
 
 /**
  * Builds the full params object for a shape change:
- *  1. Applies the shape's default dimensions / keychain settings.
- *  2. Preserves text content and text mode from the previous params.
- *  3. Normalises keychain placement + position for the new shape.
+ *  1. Applies the shape's default dimensions / keychain / text-offset settings.
+ *  2. Preserves text content, text mode, and text depth preferences.
+ *  3. Normalises keychain placement + position (no-op with no constraints).
  */
 export function applyShapeChange(prevParams: ModelParams, newShape: Shape): ModelParams {
   const defaults = SHAPE_DEFAULTS[newShape]
   const next: ModelParams = {
-    ...prevParams,   // carry over everything (text, textMode, …)
-    ...defaults,     // apply new shape's dimension / keychain defaults
+    ...prevParams,            // carry over everything
+    ...defaults,              // apply new shape's dimension / keychain / offset defaults
     shape: newShape,
-    // Explicitly preserve user text — it belongs to the user, not the shape.
-    text:     prevParams.text,
-    textMode: prevParams.textMode,
+    // Preserve user content and style choices across shape changes.
+    text:             prevParams.text,
+    textMode:         prevParams.textMode,
+    textReliefDepth:  prevParams.textReliefDepth,
+    textInsetDepth:   prevParams.textInsetDepth,
   }
   return normalizeKeychainForShape(next)
 }

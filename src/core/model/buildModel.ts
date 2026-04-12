@@ -14,6 +14,8 @@ import { buildKeychainTab, shapeEdgeDistance } from '../builders/keychainTab'
 import { applyText, getTextDimensions } from '../builders/textModes'
 import { validateParams } from './validators'
 
+// ── Layout constants ───────────────────────────────────────────────────────
+
 /** Horizontal padding between text edge and shape edge (each side, mm). */
 const H_PAD = 9
 
@@ -22,11 +24,16 @@ const V_PAD = 5
 
 /**
  * How far (mm) positive text geometry is embedded below the shape top face
- * before the union.  Must be large enough that JSCAD and downstream slicers
- * do not treat the two surfaces as coplanar.  0.01 mm falls within typical
- * slicer vertex-merge tolerances and caused non-manifold faces in exported STL.
+ * before the union.  Must exceed typical slicer vertex-merge tolerances to
+ * avoid coplanar faces in the exported STL.
  */
 const TEXT_POSITIVE_EMBED = 0.2
+
+/**
+ * Safety clearance (mm) between the text bounding rectangle and the keyring
+ * hole circle when placement is 'inside'.
+ */
+const HOLE_TEXT_CLEARANCE = 2
 
 // ── Interior hole positioning ──────────────────────────────────────────────
 
@@ -52,8 +59,10 @@ function insideHoleXY(
 interface EffectiveDimensions {
   width: number
   height: number
-  textOffsetX: number
-  textOffsetY: number
+  /** Auto-centering offset X that shifts text into the hole-free zone (mm). */
+  autoOffsetX: number
+  /** Auto-centering offset Y that shifts text into the hole-free zone (mm). */
+  autoOffsetY: number
 }
 
 /** Minimum safe font size for JSCAD geometry (mm). Below this, geometry becomes degenerate. */
@@ -62,11 +71,6 @@ const MIN_FONT_SIZE = 0.1
 /**
  * Derives the effective font size by combining the auto-fit base size with
  * the user's `textSize` multiplier.
- *
- * Base size is proportional to the shape dimensions so that the default
- * (textSize = 1.0) always produces well-fitting text. `textSize` then scales
- * that base up or down. The result is clamped to MIN_FONT_SIZE to keep
- * geometry valid at very small multipliers.
  */
 function deriveFontSize(params: ModelParams): number {
   const base = Math.min(params.height * 0.32, params.width * 0.1, 9)
@@ -75,12 +79,12 @@ function deriveFontSize(params: ModelParams): number {
 }
 
 /**
- * Returns the effective shape dimensions needed to contain the text with
- * consistent padding, and the XY offset that keeps text centred inside the
- * usable region (the area not occupied by an inside keyring hole).
+ * Computes effective shape dimensions (potentially expanded to fit text) and
+ * the auto-centering offsets that shift text into the hole-free zone when an
+ * inside-placement hole is active.
  *
- * Outside-placement holes do not consume interior space — the full interior
- * is available for text in that case.
+ * The auto offsets are a baseline.  The user's textOffsetX/Y are ADDED on top
+ * in computeTextPosition(), then the combined value is clamped to the valid area.
  */
 function computeEffectiveDimensions(params: ModelParams, fontSize: number): EffectiveDimensions {
   const { width, height, isKeychain, holeDiameter, keychainPosition, keychainPlacement } = params
@@ -90,26 +94,25 @@ function computeEffectiveDimensions(params: ModelParams, fontSize: number): Effe
   const holeReserve = insideHole ? holeDiameter + 6 : 0
 
   const isVertical = keychainPosition === 'top' || keychainPosition === 'bottom'
-  const verticalReserve = isVertical ? holeReserve : 0
+  const verticalReserve   = isVertical ? holeReserve : 0
   const horizontalReserve = isVertical ? 0 : holeReserve
 
-  // Text-centre offset shifts text into the hole-free region.
-  // e.g. top-inside hole → shift text down by half the reserved band.
-  const textOffsetY =
-    keychainPosition === 'top' ? -(verticalReserve / 2) :
-    keychainPosition === 'bottom' ? verticalReserve / 2 : 0
+  // Auto offset: shift text centre into the hole-free half of the shape.
+  const autoOffsetY =
+    keychainPosition === 'top'    ? -(verticalReserve / 2) :
+    keychainPosition === 'bottom' ?  (verticalReserve / 2) : 0
 
-  const textOffsetX =
-    keychainPosition === 'left' ? horizontalReserve / 2 :
+  const autoOffsetX =
+    keychainPosition === 'left'  ?  (horizontalReserve / 2) :
     keychainPosition === 'right' ? -(horizontalReserve / 2) : 0
 
   if (!params.text.trim()) {
-    return { width, height, textOffsetX, textOffsetY }
+    return { width, height, autoOffsetX, autoOffsetY }
   }
 
   const dims = getTextDimensions(params.text, fontSize)
   if (!dims) {
-    return { width, height, textOffsetX, textOffsetY }
+    return { width, height, autoOffsetX, autoOffsetY }
   }
 
   const minWidth  = dims.width  + H_PAD * 2 + horizontalReserve
@@ -118,9 +121,80 @@ function computeEffectiveDimensions(params: ModelParams, fontSize: number): Effe
   return {
     width:       Math.max(width,  minWidth),
     height:      Math.max(height, minHeight),
-    textOffsetX,
-    textOffsetY,
+    autoOffsetX,
+    autoOffsetY,
   }
+}
+
+// ── Text position clamping ─────────────────────────────────────────────────
+
+/**
+ * Computes the final XY position for text rendering.
+ *
+ * Strategy:
+ *  1. Start from (autoOffsetX + params.textOffsetX, autoOffsetY + params.textOffsetY).
+ *  2. Clamp to keep the text bounding box within the shape with H_PAD/V_PAD margin.
+ *  3. If an inside-placement hole is active, additionally push the text away
+ *     from the hole so the two never overlap.
+ *
+ * The result is always a valid position — geometry never lands outside the
+ * shape boundary or over an inside hole.
+ */
+function computeTextPosition(
+  effective: ModelParams,
+  textW: number,
+  textH: number,
+  autoOffsetX: number,
+  autoOffsetY: number,
+): [number, number] {
+  const { width: sw, height: sh } = effective
+
+  // ── 1. Shape boundary limits ─────────────────────────────────────────────
+  const maxTx = Math.max(0, sw / 2 - textW / 2 - H_PAD)
+  const maxTy = Math.max(0, sh / 2 - textH / 2 - V_PAD)
+
+  let tx = Math.max(-maxTx, Math.min(maxTx, autoOffsetX + effective.textOffsetX))
+  let ty = Math.max(-maxTy, Math.min(maxTy, autoOffsetY + effective.textOffsetY))
+
+  // ── 2. Inside-hole exclusion ─────────────────────────────────────────────
+  if (effective.isKeychain && effective.keychainPlacement === 'inside') {
+    const [hx, hy] = insideHoleXY(
+      effective.shape,
+      effective.keychainPosition,
+      effective.width,
+      effective.height,
+      effective.holeDiameter,
+    )
+    const holeR   = effective.holeDiameter / 2
+    const clearR  = holeR + HOLE_TEXT_CLEARANCE  // minimum centre-to-edge distance
+
+    // Axis-aligned rectangular exclusion: text rectangle must not overlap the
+    // hole circle's bounding box (extended by half the text size on each side).
+    switch (effective.keychainPosition) {
+      case 'top':
+        // Hole is near the top edge; text must stay below it.
+        ty = Math.min(ty, hy - clearR - textH / 2)
+        break
+      case 'bottom':
+        // Hole is near the bottom edge; text must stay above it.
+        ty = Math.max(ty, hy + clearR + textH / 2)
+        break
+      case 'left':
+        // Hole is near the left edge; text must stay to the right.
+        tx = Math.max(tx, hx + clearR + textW / 2)
+        break
+      case 'right':
+        // Hole is near the right edge; text must stay to the left.
+        tx = Math.min(tx, hx - clearR - textW / 2)
+        break
+    }
+
+    // Re-clamp to shape bounds after the hole push (edge cases on small shapes).
+    tx = Math.max(-maxTx, Math.min(maxTx, tx))
+    ty = Math.max(-maxTy, Math.min(maxTy, ty))
+  }
+
+  return [tx, ty]
 }
 
 // ── Public builder ─────────────────────────────────────────────────────────
@@ -132,7 +206,7 @@ export function buildModel(params: ModelParams): any {
   }
 
   const fontSize = deriveFontSize(params)
-  let { width, height, textOffsetX, textOffsetY } = computeEffectiveDimensions(params, fontSize)
+  let { width, height, autoOffsetX, autoOffsetY } = computeEffectiveDimensions(params, fontSize)
 
   // Circle must stay equilateral: expand to the larger effective dimension.
   if (params.shape === 'circle') {
@@ -144,6 +218,9 @@ export function buildModel(params: ModelParams): any {
   // All downstream builders use the effective (possibly expanded) dimensions.
   const effective: ModelParams = { ...params, width, height }
 
+  // Clamp inset depth to a safe fraction of thickness so we never cut through.
+  const safeInsetDepth = Math.min(effective.textInsetDepth, effective.thickness * 0.8)
+
   // ── 1. Base shape ──────────────────────────────────────────────────────
   let shape: any
   switch (effective.shape) {
@@ -153,7 +230,6 @@ export function buildModel(params: ModelParams): any {
     case 'rounded-rectangle':
       shape = buildRectangleTag({
         ...extractRectangleParams(effective),
-        // Use 25 % of the smaller dimension for a distinctly rounder look.
         cornerRadius: Math.min(effective.width, effective.height) * 0.25,
       })
       break
@@ -180,7 +256,6 @@ export function buildModel(params: ModelParams): any {
   // ── 2. Keychain hole ──────────────────────────────────────────────────
   if (effective.isKeychain) {
     if (effective.keychainPlacement === 'outside') {
-      // Build the external tab and union it with the shape first, then punch the hole.
       const { tab, holeX, holeY } = buildKeychainTab({
         shape:        effective.shape,
         position:     effective.keychainPosition,
@@ -200,7 +275,6 @@ export function buildModel(params: ModelParams): any {
         }),
       )
     } else {
-      // Inside: place the hole directly within the shape.
       const [hx, hy] = insideHoleXY(
         effective.shape,
         effective.keychainPosition,
@@ -227,32 +301,39 @@ export function buildModel(params: ModelParams): any {
       fontSize,
       effective.textMode,
       effective.thickness,
+      effective.textReliefDepth,
+      safeInsetDepth,
     )
 
     if (textGeom) {
+      const textDims   = getTextDimensions(effective.text, fontSize)
+      const [tx, ty]   = textDims
+        ? computeTextPosition(effective, textDims.width, textDims.height, autoOffsetX, autoOffsetY)
+        : [autoOffsetX + effective.textOffsetX, autoOffsetY + effective.textOffsetY]
+
       const shapeTop    =  effective.thickness / 2
       const shapeBottom = -effective.thickness / 2
 
       switch (effective.textMode) {
         case 'positive': {
-          // Embed TEXT_POSITIVE_EMBED mm into the shape so the text base is
-          // clearly interior — not coplanar with the shape top face.
-          const p = transforms.translate([textOffsetX, textOffsetY, shapeTop - TEXT_POSITIVE_EMBED], textGeom)
+          // Embed TEXT_POSITIVE_EMBED mm into the shape top so the union has a
+          // clear interior overlap (avoids coplanar faces in exported STL).
+          const p = transforms.translate([tx, ty, shapeTop - TEXT_POSITIVE_EMBED], textGeom)
           shape = booleans.union(shape, p)
           break
         }
         case 'negative': {
-          const depth = Math.min(1.5, effective.thickness * 0.45)
-          const p = transforms.translate([textOffsetX, textOffsetY, shapeTop - depth], textGeom)
+          // textGeom has height = safeInsetDepth + CUTTER_OVERCUT.
+          // Translating from (shapeTop - safeInsetDepth) puts the cutter top
+          // slightly above shapeTop — clean, non-coplanar subtraction.
+          const p = transforms.translate([tx, ty, shapeTop - safeInsetDepth], textGeom)
           shape = booleans.subtract(shape, p)
           break
         }
         case 'cutout': {
-          // buildCutoutText returns geometry of height (thickness + 2).
-          // Translating from (shapeBottom - 1) places it from shapeBottom-1
-          // to shapeTop+1, protruding 1 mm past each face — matching the
-          // CUTTER_PROTRUSION constant in cutoutText.ts.
-          const p = transforms.translate([textOffsetX, textOffsetY, shapeBottom - 1], textGeom)
+          // buildCutoutText returns height (thickness + 2).
+          // From (shapeBottom - 1) the cutter spans shapeBottom-1 → shapeTop+1.
+          const p = transforms.translate([tx, ty, shapeBottom - 1], textGeom)
           shape = booleans.subtract(shape, p)
           break
         }

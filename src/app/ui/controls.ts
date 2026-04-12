@@ -224,16 +224,16 @@ export function createControls(): void {
   const heightRow    = sliderRow(t('shape.height'),    'height',    15,  80,  1  )
   const thicknessRow = sliderRow(t('shape.thickness'), 'thickness',  1,  10,  0.5)
 
-  // The width label text node is the first child of the <label> element.
-  // We swap it when the shape changes to/from circle (diameter vs width).
   const widthLabelEl = widthRow.querySelector('label')
 
-  // Built below — need forward references so applyShapeUX can reach them.
+  // Forward references for applyShapeUX / applyTextModeUX.
   let placementSegRow: HTMLElement
   let positionSegRow: HTMLElement
+  let reliefDepthRow: HTMLElement
+  let insetDepthRow: HTMLElement
 
+  // ── applyShapeUX ────────────────────────────────────────────
   function applyShapeUX(shape: Shape): void {
-    // Circle: hide height row, relabel width → diameter.
     const isCircle = shape === 'circle'
     heightRow.style.display = isCircle ? 'none' : ''
     if (widthLabelEl?.childNodes[0]) {
@@ -241,9 +241,11 @@ export function createControls(): void {
         (isCircle ? t('shape.diameter') : t('shape.width')) + ' '
     }
 
-    // Constrained shapes: show only valid placement/position options and sync active states.
+    // With no shape-specific constraints all positions/placements are always
+    // shown.  getKeychainConstraint now always returns null, but the logic is
+    // kept for future extensibility.
     const constraint = getKeychainConstraint(shape)
-    const { params } = getState()
+    const { params: p } = getState()
 
     if (placementSegRow) {
       placementSegRow
@@ -253,10 +255,10 @@ export function createControls(): void {
           if (constraint) {
             const isAllowed = constraint.allowedPlacements.includes(val)
             btn.style.display = isAllowed ? '' : 'none'
-            btn.classList.toggle('active', isAllowed && val === params.keychainPlacement)
+            btn.classList.toggle('active', isAllowed && val === p.keychainPlacement)
           } else {
             btn.style.display = ''
-            btn.classList.toggle('active', val === params.keychainPlacement)
+            btn.classList.toggle('active', val === p.keychainPlacement)
           }
         })
     }
@@ -269,20 +271,20 @@ export function createControls(): void {
           if (constraint) {
             const isAllowed = constraint.allowedPositions.includes(val)
             btn.style.display = isAllowed ? '' : 'none'
-            btn.classList.toggle('active', isAllowed && val === params.keychainPosition)
+            btn.classList.toggle('active', isAllowed && val === p.keychainPosition)
           } else {
             btn.style.display = ''
-            btn.classList.toggle('active', val === params.keychainPosition)
+            btn.classList.toggle('active', val === p.keychainPosition)
           }
         })
     }
 
-    // Sync all slider and checkbox DOM elements to the current state values.
-    // This ensures the UI reflects shape-change parameter resets applied in state.
+    // Sync all slider / checkbox DOM elements to current state (handles
+    // shape-change resets applied in state.ts).
     container!.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((input) => {
       const key = input.dataset['key'] as keyof ModelParams
-      if (!(key in params)) return
-      const v = params[key]
+      if (!(key in p)) return
+      const v = p[key]
       if (input.type === 'range') {
         input.value = String(v)
         const span = input.closest('.control-row')?.querySelector<HTMLSpanElement>('label span')
@@ -293,6 +295,14 @@ export function createControls(): void {
     })
   }
 
+  // ── applyTextModeUX ─────────────────────────────────────────
+  /** Shows / hides depth controls based on the active text mode. */
+  function applyTextModeUX(mode: TextMode): void {
+    if (reliefDepthRow) reliefDepthRow.style.display = mode === 'positive' ? '' : 'none'
+    if (insetDepthRow)  insetDepthRow.style.display  = mode === 'negative' ? '' : 'none'
+  }
+
+  // ── Shape group ─────────────────────────────────────────────
   const shapeSelectRow = selectRow<Shape>(
     t('shape.type'),
     [
@@ -339,7 +349,7 @@ export function createControls(): void {
 
   container.appendChild(divider())
 
-  // ── Keychain ───────────────────────────────────────────────
+  // ── Keychain group ──────────────────────────────────────────
   placementSegRow = segmentRow<KeychainPlacement>(
     t('keychain.placement'),
     [
@@ -373,12 +383,16 @@ export function createControls(): void {
   )
 
   // Reflect the initial shape in the UI now that all rows exist.
-  // This handles circle (height row / label) and shape constraints (placement/position buttons).
   applyShapeUX(params.shape)
 
   container.appendChild(divider())
 
-  // ── Text ───────────────────────────────────────────────────
+  // ── Text group ──────────────────────────────────────────────
+  // Depth controls are mode-specific and start hidden; applyTextModeUX sets
+  // the correct initial visibility.
+  reliefDepthRow = sliderRow(t('text.reliefDepth'), 'textReliefDepth', 0.2, 5.0, 0.1)
+  insetDepthRow  = sliderRow(t('text.insetDepth'),  'textInsetDepth',  0.2, 5.0, 0.1)
+
   container.appendChild(
     group(
       t('text.group'),
@@ -392,14 +406,24 @@ export function createControls(): void {
           { value: 'cutout',   label: t('text.mode.cutout') },
         ],
         params.textMode,
-        (v) => updateParams({ textMode: v }),
+        (v) => {
+          updateParams({ textMode: v })
+          applyTextModeUX(v)
+        },
       ),
+      reliefDepthRow,
+      insetDepthRow,
+      sliderRow(t('text.offsetX'), 'textOffsetX', -50, 50, 1),
+      sliderRow(t('text.offsetY'), 'textOffsetY', -50, 50, 1),
     ),
   )
 
+  // Set initial depth-control visibility based on the loaded text mode.
+  applyTextModeUX(params.textMode)
+
   container.appendChild(divider())
 
-  // ── Display ────────────────────────────────────────────────
+  // ── Display group ───────────────────────────────────────────
   container.appendChild(
     group(t('display.group'), colorPickerRow(), colorInfoBox()),
   )

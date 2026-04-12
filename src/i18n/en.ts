@@ -43,14 +43,18 @@ const en = {
   'keychain.position.right':    'Right',
 
   // ── Text group ─────────────────────────────────────────────
-  'text.group':       'Text',
-  'text.content':     'Content',
-  'text.placeholder': 'Enter text...',
-  'text.size':        'Text Size',
-  'text.mode':        'Mode',
-  'text.mode.raised': 'Raised',
-  'text.mode.inset':  'Inset',
-  'text.mode.cutout': 'Cutout',
+  'text.group':        'Text',
+  'text.content':      'Content',
+  'text.placeholder':  'Enter text...',
+  'text.size':         'Text Size',
+  'text.mode':         'Mode',
+  'text.mode.raised':  'Raised',
+  'text.mode.inset':   'Inset',
+  'text.mode.cutout':  'Cutout',
+  'text.offsetX':      'Horizontal Offset (mm)',
+  'text.offsetY':      'Vertical Offset (mm)',
+  'text.reliefDepth':  'Relief Height (mm)',
+  'text.insetDepth':   'Inset Depth (mm)',
 
   // ── Display group ──────────────────────────────────────────
   'display.group':     'Display',

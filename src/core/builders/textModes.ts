@@ -51,7 +51,13 @@ export function getTextDimensions(str: string, fontSize: number): TextDimensions
 }
 
 /**
- * Builds the text geometry for the given mode, ready to be applied to the base shape.
+ * Builds the 3D text geometry for the given mode, ready to be positioned and
+ * applied to the base shape via boolean union/subtract.
+ *
+ * @param reliefDepth  Height of raised text above the surface (positive mode).
+ * @param insetDepth   Depth of engraved pocket (negative mode); already clamped
+ *                     to a safe fraction of the shape thickness by the caller.
+ *
  * Returns null if no text geometry can be produced.
  */
 export function applyText(
@@ -59,15 +65,17 @@ export function applyText(
   fontSize: number,
   mode: TextMode,
   thickness: number,
+  reliefDepth: number,
+  insetDepth: number,
 ): any | null {
   const geom2D = buildText2D(str, fontSize)
   if (!geom2D) return null
 
   switch (mode) {
     case 'positive':
-      return buildPositiveText(geom2D, 1.2)
+      return buildPositiveText(geom2D, reliefDepth)
     case 'negative':
-      return buildNegativeText(geom2D, Math.min(1.5, thickness * 0.45))
+      return buildNegativeText(geom2D, insetDepth)
     case 'cutout':
       return buildCutoutText(geom2D, thickness)
   }
