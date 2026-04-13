@@ -30,6 +30,8 @@ const SHAPE_KEYCHAIN_CONSTRAINTS: Partial<Record<Shape, ShapeKeychainConstraint>
  * the coordinate space) changes.  textReliefDepth/textInsetDepth are NOT
  * included — they are style preferences preserved across shape changes.
  */
+// fontFamily intentionally excluded from ShapeDefaults so the user's chosen
+// font persists across shape changes — it's a style preference, not a shape property.
 export type ShapeDefaults = Pick<ModelParams,
   | 'width' | 'height' | 'thickness' | 'textSize'
   | 'isKeychain' | 'holeDiameter' | 'keychainPosition' | 'keychainPlacement'
@@ -132,6 +134,7 @@ export function applyShapeChange(prevParams: ModelParams, newShape: Shape): Mode
     textMode:         prevParams.textMode,
     textReliefDepth:  prevParams.textReliefDepth,
     textInsetDepth:   prevParams.textInsetDepth,
+    fontFamily:       prevParams.fontFamily,
   }
   return normalizeKeychainForShape(next)
 }

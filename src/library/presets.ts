@@ -1,10 +1,12 @@
 import type { ModelParams } from '../core/parameters/common'
+import { DEFAULT_FONT_ID } from '../core/text/fontRegistry'
 
 const TEXT_DEFAULTS = {
   textOffsetX: 0,
   textOffsetY: 0,
   textReliefDepth: 1.2,
   textInsetDepth: 1.2,
+  fontFamily: DEFAULT_FONT_ID,
 } as const
 
 export const PRESETS: Record<string, ModelParams> = {

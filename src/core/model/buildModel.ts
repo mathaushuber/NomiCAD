@@ -110,7 +110,7 @@ function computeEffectiveDimensions(params: ModelParams, fontSize: number): Effe
     return { width, height, autoOffsetX, autoOffsetY }
   }
 
-  const dims = getTextDimensions(params.text, fontSize)
+  const dims = getTextDimensions(params.text, fontSize, params.fontFamily)
   if (!dims) {
     return { width, height, autoOffsetX, autoOffsetY }
   }
@@ -206,6 +206,7 @@ export function buildModel(params: ModelParams): any {
   }
 
   const fontSize = deriveFontSize(params)
+  const { fontFamily } = params
   let { width, height, autoOffsetX, autoOffsetY } = computeEffectiveDimensions(params, fontSize)
 
   // Circle must stay equilateral: expand to the larger effective dimension.
@@ -303,10 +304,11 @@ export function buildModel(params: ModelParams): any {
       effective.thickness,
       effective.textReliefDepth,
       safeInsetDepth,
+      fontFamily,
     )
 
     if (textGeom) {
-      const textDims   = getTextDimensions(effective.text, fontSize)
+      const textDims   = getTextDimensions(effective.text, fontSize, fontFamily)
       const [tx, ty]   = textDims
         ? computeTextPosition(effective, textDims.width, textDims.height, autoOffsetX, autoOffsetY)
         : [autoOffsetX + effective.textOffsetX, autoOffsetY + effective.textOffsetY]

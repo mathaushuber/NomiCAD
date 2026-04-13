@@ -1,5 +1,5 @@
 import { getState, updateParams, updateColor } from './state'
-import type { Shape, TextMode, KeychainPosition, KeychainPlacement, ModelParams } from '../../core/parameters/common'
+import type { Shape, TextMode, KeychainPosition, KeychainPlacement, ModelParams, FontId } from '../../core/parameters/common'
 import { getKeychainConstraint } from '../../core/parameters/shapeConstraints'
 import { t } from '../../i18n/index'
 
@@ -393,10 +393,49 @@ export function createControls(): void {
   reliefDepthRow = sliderRow(t('text.reliefDepth'), 'textReliefDepth', 0.2, 5.0, 0.1)
   insetDepthRow  = sliderRow(t('text.insetDepth'),  'textInsetDepth',  0.2, 5.0, 0.1)
 
+  const fontSelectRow = selectRow<FontId>(
+    t('text.font'),
+    [
+      {
+        group: t('text.font.group.classic'),
+        items: [
+          { value: 'simplex',       label: t('text.font.simplex')       },
+          { value: 'simplex-bold',  label: t('text.font.simplex-bold')  },
+          { value: 'simplex-light', label: t('text.font.simplex-light') },
+          { value: 'heavy',         label: t('text.font.heavy')         },
+          { value: 'poster',        label: t('text.font.poster')        },
+        ],
+      },
+      {
+        group: t('text.font.group.proportions'),
+        items: [
+          { value: 'condensed',      label: t('text.font.condensed')      },
+          { value: 'extended',       label: t('text.font.extended')       },
+          { value: 'bold-condensed', label: t('text.font.bold-condensed') },
+          { value: 'bold-extended',  label: t('text.font.bold-extended')  },
+          { value: 'wide',           label: t('text.font.wide')           },
+        ],
+      },
+      {
+        group: t('text.font.group.style'),
+        items: [
+          { value: 'simplex-angular', label: t('text.font.simplex-angular') },
+          { value: 'stencil',         label: t('text.font.stencil')         },
+          { value: 'technical',       label: t('text.font.technical')       },
+          { value: 'engraved',        label: t('text.font.engraved')        },
+          { value: 'rounded',         label: t('text.font.rounded')         },
+        ],
+      },
+    ],
+    params.fontFamily,
+    (v) => updateParams({ fontFamily: v }),
+  )
+
   container.appendChild(
     group(
       t('text.group'),
       textRow(t('text.content'), 'text'),
+      fontSelectRow,
       sliderRow(t('text.size'), 'textSize', 0.1, 2.0, 0.1),
       segmentRow<TextMode>(
         t('text.mode'),

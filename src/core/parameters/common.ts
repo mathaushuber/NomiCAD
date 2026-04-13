@@ -1,3 +1,6 @@
+import type { FontId } from '../text/fontRegistry'
+import { DEFAULT_FONT_ID } from '../text/fontRegistry'
+
 export type Shape =
   | 'rectangle'
   | 'rounded-rectangle'
@@ -13,6 +16,8 @@ export type TextMode = 'positive' | 'negative' | 'cutout'
 export type KeychainPosition = 'top' | 'bottom' | 'left' | 'right'
 
 export type KeychainPlacement = 'inside' | 'outside'
+
+export type { FontId }
 
 export interface ModelParams {
   shape: Shape
@@ -51,6 +56,12 @@ export interface ModelParams {
    * Clamped to a safe fraction of thickness at build time.
    */
   textInsetDepth: number
+  /**
+   * Font style used for text rendering.
+   * All options use the JSCAD-native Hershey simplex glyph set; the visual
+   * difference is produced by varying stroke thickness and corner style.
+   */
+  fontFamily: FontId
 }
 
 export const DEFAULT_PARAMS: ModelParams = {
@@ -69,4 +80,5 @@ export const DEFAULT_PARAMS: ModelParams = {
   textOffsetY: 0,
   textReliefDepth: 1.2,
   textInsetDepth: 1.2,
+  fontFamily: DEFAULT_FONT_ID,
 }

@@ -95,6 +95,59 @@ Shapes are grouped into categories in the sidebar select:
 
 All shapes support text modes (positive, negative, cutout), `textSize` scaling, the keychain hole system, and STL export.
 
+### Font selection
+
+NomiCAD ships 15 built-in font styles, all derived from the Hershey simplex glyph set bundled with JSCAD. Fonts are grouped into three categories in the sidebar dropdown:
+
+#### Classic — weight variants
+
+| Font ID           | UI Label | Stroke weight | Corner style | Best for                         |
+|-------------------|----------|---------------|--------------|----------------------------------|
+| `simplex`         | Simplex  | 0.07×         | Round        | General use, clean default       |
+| `simplex-bold`    | Bold     | 0.13×         | Round        | Small text, high legibility      |
+| `simplex-light`   | Light    | 0.04×         | Round        | Delicate, smooth-finish prints   |
+| `heavy`           | Heavy    | 0.18×         | Round        | High-contrast, reads at distance |
+| `poster`          | Poster   | 0.22×         | Round        | Short display text, large sizes  |
+
+#### Proportions — spacing variants
+
+| Font ID           | UI Label       | Stroke | Spacing | Best for                          |
+|-------------------|----------------|--------|---------|-----------------------------------|
+| `condensed`       | Condensed      | 0.07×  | 0.72×   | More characters in less width     |
+| `extended`        | Extended       | 0.07×  | 1.42×   | Open, airy feel                   |
+| `bold-condensed`  | Bold Condensed | 0.12×  | 0.75×   | Bold without wide footprint       |
+| `bold-extended`   | Bold Extended  | 0.12×  | 1.38×   | Commanding headline style         |
+| `wide`            | Wide           | 0.055× | 1.65×   | Sophisticated spaced-out look     |
+
+#### Style — corner and cap variants
+
+| Font ID           | UI Label  | Stroke | Corner     | Best for                          |
+|-------------------|-----------|--------|------------|-----------------------------------|
+| `simplex-angular` | Angular   | 0.08×  | Flat/edge  | Technical, engraving look         |
+| `stencil`         | Stencil   | 0.10×  | Flat/edge  | Stencil-spray aesthetic           |
+| `technical`       | Technical | 0.065× | Flat/edge  | Engineering dataplate style       |
+| `engraved`        | Engraved  | 0.05×  | Flat/edge  | CNC engraving, subtle inset text  |
+| `rounded`         | Rounded   | 0.09×  | Round ×16  | Friendly, smooth, soft look       |
+
+All 15 styles use the same underlying Hershey simplex glyphs. The visual difference is produced by varying stroke thickness (`strokeScale`), letter spacing (`letterSpacing`), and stroke-end shape (`expandCorners`/`expandSegments`). No font files are converted or loaded at runtime — geometry is generated entirely from the vector data bundled with `@jscad/modeling`.
+
+**Accented character support:** Accented characters render as actual geometry with their diacritical marks intact. The extended font (`accentedFont.ts`) adds glyph entries for code points 192–252 to the base simplex font. JSCAD's character renderer (`vectorChar`) looks up glyphs by code point with no ASCII range guard, so entries for 'ê' (234), 'ã' (227), 'ç' (231), etc. are found and rendered correctly. Each accented glyph is composed from the base letter's strokes plus a diacritical mark (acute, grave, circumflex, tilde, diaeresis, or cedilla) positioned above or below the letter.
+
+Validated examples: "Corrêa" → Corr**ê**a, "João" → Jo**ã**o, "Coração" → Cora**çã**o, "Ação" → A**çã**o, "Informação" → Informa**çã**o.
+
+**Character support:** All printable ASCII (32–126) plus the following accented characters: á à â ã ä / é è ê ë / í ì î ï / ó ò ô õ ö / ú ù û ü / ç and their uppercase equivalents Á À Â Ã Ä / É È Ê Ë / Í Ì Î Ï / Ó Ò Ô Õ Ö / Ú Ù Û Ü / Ç. Characters outside this set fall back to JSCAD's built-in '?' glyph.
+
+**How font selection works:**
+
+1. The user picks a font from the **Text → Font** dropdown (grouped `<select>`).
+2. The `fontFamily` parameter is stored in `ModelParams`.
+3. `buildText2D()` normalises the input string, looks up the `FontProfile` from `FONT_REGISTRY`, and passes `strokeScale`, `expandCorners`, and `expandSegments` to the path-expansion step.
+4. Because all styles rely on JSCAD's default font, no `font` key is passed to `vectorText()` — JSCAD uses its built-in simplex data automatically.
+
+**Adding a new style:** Append an entry to `FONT_REGISTRY` in `src/core/text/fontRegistry.ts`, extend the `FontId` union, add the ID to `FONT_IDS`, add the entry to the dropdown groups in `controls.ts`, and add translation keys for `text.font.<id>` in `en.ts` and `pt-BR.ts`. No other files need to change.
+
+**Adding a genuinely different glyph set:** Provide a Hershey-format data object (same structure as `@jscad/modeling/src/text/fonts/single-line/hershey/simplex.js`) and assign it to `fontData` in the profile. `buildText2D()` will pass it through to `vectorText()` automatically.
+
 ### Text sizing
 
 Text rendering uses a two-step sizing model:
@@ -422,7 +475,10 @@ const geo = oval({ width: 45, height: 30 })
 
 ## Limitations
 
-- Text rendering uses a built-in JSCAD font; custom fonts are not supported
+- Text rendering uses JSCAD's built-in Hershey simplex glyph set; custom TTF/OTF fonts are not supported
+- All 15 font styles share the same underlying Hershey simplex glyphs — they differ in stroke thickness, letter spacing, and corner style only (no distinct letterforms)
+- Accented characters (á, ê, ã, ç, etc.) render as geometry with their diacritical marks composed from vector strokes; marks are approximate Hershey-style lines, not typographic-quality accents
+- Characters completely outside the Latin script (Arabic, Chinese, Japanese, etc.) are not supported and fall back to JSCAD's '?' glyph
 - Colors are viewer-only — STL files do not carry color data
 - Only two languages are currently supported: `en` and `pt-BR`
 - Units are always millimeters; unit conversion is not implemented
@@ -439,6 +495,7 @@ const geo = oval({ width: 45, height: 30 })
 | Theme variables   | Add new CSS custom properties in `applyTheme()` and reference them in the CSS                   |
 | New shape         | Add a builder in `src/core/builders/`, add to `Shape` union, wire into `buildModel.ts`, add i18n keys, add to `controls.ts` select groups |
 | New shape category| Add a new group object to the `selectRow` call in `controls.ts` and a `shape.category.*` i18n key |
+| New font style    | Add an entry to `FONT_REGISTRY` in `fontRegistry.ts`, extend `FontId` union, add i18n keys      |
 | New text mode     | Add an implementation in `src/core/text/`, extend `TextMode` union                              |
 | New preset        | Add an entry to `src/library/presets.ts`                                                         |
 | Units             | Extend `units` config field and pass it through to slider labels via `t()`                      |
