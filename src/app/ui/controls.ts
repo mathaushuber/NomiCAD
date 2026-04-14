@@ -241,9 +241,7 @@ export function createControls(): void {
         (isCircle ? t('shape.diameter') : t('shape.width')) + ' '
     }
 
-    // With no shape-specific constraints all positions/placements are always
-    // shown.  getKeychainConstraint now always returns null, but the logic is
-    // kept for future extensibility.
+    // Shape-specific constraints hide disallowed placement/position buttons.
     const constraint = getKeychainConstraint(shape)
     const { params: p } = getState()
 

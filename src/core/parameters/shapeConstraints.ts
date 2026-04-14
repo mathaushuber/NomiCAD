@@ -14,13 +14,40 @@ export interface ShapeKeychainConstraint {
 }
 
 /**
- * All shapes now support every combination of placement (inside/outside) and
- * position (top/bottom/left/right).  The geometry pipeline's OVERLAP constant
- * and shape-edge-distance calculation ensure the tab or hole stays attached
- * regardless of the selected shape.  Previous per-shape restrictions are
- * intentionally removed.
+ * Per-shape keychain constraints.
+ *
+ * Triangle – only vertical positions (top/bottom); left/right tabs look
+ *   misaligned on a triangle's slanted sides.  Both inside and outside
+ *   placements are permitted.
+ *
+ * Heart – the only natural attachment point is the bottom tip, and only an
+ *   external (outside) tab is allowed there; an inside hole at the tip would
+ *   pierce through too little material.  Top position is not permitted because
+ *   the heart's concave notch makes the geometry awkward.
+ *
+ * Star – only the top point makes a clean external tab; bottom looks inverted
+ *   and inside holes at any point leave too little material between the arms.
  */
-const SHAPE_KEYCHAIN_CONSTRAINTS: Partial<Record<Shape, ShapeKeychainConstraint>> = {}
+const SHAPE_KEYCHAIN_CONSTRAINTS: Partial<Record<Shape, ShapeKeychainConstraint>> = {
+  triangle: {
+    allowedPositions: ['top', 'bottom'],
+    allowedPlacements: ['inside', 'outside'],
+    defaultPosition:  'top',
+    defaultPlacement: 'outside',
+  },
+  heart: {
+    allowedPositions: ['bottom'],
+    allowedPlacements: ['outside'],
+    defaultPosition:  'bottom',
+    defaultPlacement: 'outside',
+  },
+  star: {
+    allowedPositions: ['top'],
+    allowedPlacements: ['outside'],
+    defaultPosition:  'top',
+    defaultPlacement: 'outside',
+  },
+}
 
 // ── Shape defaults ────────────────────────────────���────────────────────────
 
